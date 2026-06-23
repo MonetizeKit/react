@@ -1,0 +1,158 @@
+import { useEffect, useState, type CSSProperties } from "react";
+import { useMonetizeKit } from "../provider";
+import { tokensToStyle } from "../theme/tokens";
+import { describePlanPrice } from "../lib/format";
+import type { Plan } from "../types";
+
+export interface PricingTableProps {
+  /** Plans to render; if omitted, fetched live from the publishable-key API. */
+  plans?: Plan[];
+  /** Plan name to highlight as "Most Popular". */
+  highlightPlan?: string;
+  billingCycle?: "monthly" | "annually";
+  locale?: string;
+  onSelectPlan?: (planId: string) => void;
+  /** Where the Contact Sales CTA links (defaults to no-op). */
+  onContactSales?: (planId: string) => void;
+}
+
+const wrapperStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+  gap: "1.5rem",
+  background: "var(--mk-bg)",
+  color: "var(--mk-fg)",
+  fontFamily: "var(--mk-font)",
+};
+
+const cardBase: CSSProperties = {
+  border: "1px solid var(--mk-border)",
+  borderRadius: "var(--mk-radius)",
+  padding: "1.5rem",
+  display: "flex",
+  flexDirection: "column",
+  gap: "0.75rem",
+};
+
+export function PricingTable({
+  plans: plansProp,
+  highlightPlan,
+  locale,
+  onSelectPlan,
+  onContactSales,
+}: PricingTableProps) {
+  const { client, tokens } = useMonetizeKit();
+  const [plans, setPlans] = useState<Plan[] | null>(plansProp ?? null);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    if (plansProp) {
+      setPlans(plansProp);
+      return;
+    }
+    let active = true;
+    client
+      .listPlans<{ data: Plan[] }>()
+      .then((res) => {
+        if (active) setPlans(res.data ?? []);
+      })
+      .catch((e: unknown) => {
+        if (active) setError(e instanceof Error ? e : new Error(String(e)));
+      });
+    return () => {
+      active = false;
+    };
+  }, [client, plansProp]);
+
+  if (error) {
+    return <div role="alert" style={{ color: "var(--mk-muted)" }}>Unable to load pricing.</div>;
+  }
+  if (!plans) {
+    return <div aria-busy="true" style={{ color: "var(--mk-muted)" }}>Loading pricing…</div>;
+  }
+
+  return (
+    <div style={{ ...tokensToStyle(tokens), ...wrapperStyle }} data-mk-component="pricing-table">
+      {plans.map((plan) => {
+        const price = describePlanPrice(plan, locale);
+        const highlighted =
+          highlightPlan != null &&
+          plan.name.toLowerCase() === highlightPlan.toLowerCase();
+        return (
+          <div
+            key={plan.id}
+            style={{
+              ...cardBase,
+              borderColor: highlighted ? "var(--mk-primary)" : "var(--mk-border)",
+              borderWidth: highlighted ? 2 : 1,
+            }}
+            data-mk-plan={plan.name}
+            data-mk-highlighted={highlighted ? "true" : undefined}
+          >
+            {highlighted ? (
+              <span
+                style={{
+                  alignSelf: "flex-start",
+                  background: "var(--mk-primary)",
+                  color: "var(--mk-primary-fg)",
+                  borderRadius: "var(--mk-radius)",
+                  padding: "0.125rem 0.5rem",
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                }}
+              >
+                Most Popular
+              </span>
+            ) : null}
+            <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700 }}>{plan.name}</h3>
+            {plan.description ? (
+              <p style={{ margin: 0, color: "var(--mk-muted)", fontSize: "0.875rem" }}>
+                {plan.description}
+              </p>
+            ) : null}
+            <div style={{ display: "flex", alignItems: "baseline", gap: "0.375rem" }}>
+              <span style={{ fontSize: "2rem", fontWeight: 700 }}>
+                {price.contactSales ? "Custom" : price.headline}
+              </span>
+              {price.caption ? (
+                <span style={{ color: "var(--mk-muted)", fontSize: "0.875rem" }}>
+                  {price.caption}
+                </span>
+              ) : null}
+            </div>
+            {plan.entitlements && plan.entitlements.length > 0 ? (
+              <ul style={{ margin: 0, paddingLeft: "1rem", color: "var(--mk-fg)", fontSize: "0.875rem" }}>
+                {plan.entitlements.slice(0, 6).map((e) => (
+                  <li key={e.featureKey}>
+                    {e.featureDisplayName}
+                    {e.type !== "boolean" ? `: ${String(e.value)}` : ""}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            <button
+              type="button"
+              onClick={() =>
+                price.contactSales
+                  ? onContactSales?.(plan.id)
+                  : onSelectPlan?.(plan.id)
+              }
+              style={{
+                marginTop: "auto",
+                background: "var(--mk-primary)",
+                color: "var(--mk-primary-fg)",
+                border: "none",
+                borderRadius: "var(--mk-radius)",
+                padding: "0.625rem 1rem",
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              {price.contactSales ? "Contact Sales" : "Get started"}
+            </button>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
