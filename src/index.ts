@@ -19,16 +19,27 @@ export {
   EntitlementGate,
   type EntitlementGateProps,
 } from "./components/EntitlementGate";
+export { SampleNotice, type SampleNoticeProps } from "./components/SampleNotice";
 
 // Theming
 export {
   THEME_PRESETS,
+  THEME_PRESET_NAMES,
   resolveTokens,
   tokensToStyle,
   type Appearance,
   type ThemeTokens,
   type ThemePresetName,
 } from "./theme/tokens";
+
+// Illustrative sample data (paired with <SampleNotice/>)
+export {
+  SAMPLE_PLANS,
+  SAMPLE_USAGE,
+  SAMPLE_CREDITS,
+  SAMPLE_PORTAL,
+  SAMPLE_NOTICE_TEXT,
+} from "./lib/sample-data";
 
 // Pricing formatting helpers
 export {

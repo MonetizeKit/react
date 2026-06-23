@@ -80,7 +80,24 @@ function withProvider(appearance: Appearance): Story {
   };
 }
 
-export const Memphis: Story = withProvider("memphis");
-export const Dashboard: Story = withProvider("dashboard");
 export const Light: Story = withProvider("light");
 export const Dark: Story = withProvider("dark");
+export const Memphis: Story = withProvider("memphis");
+export const Dashboard: Story = withProvider("dashboard");
+export const Console: Story = withProvider("console");
+export const Midnight: Story = withProvider("midnight");
+export const Ocean: Story = withProvider("ocean");
+export const Forest: Story = withProvider("forest");
+export const Sunset: Story = withProvider("sunset");
+export const Grape: Story = withProvider("grape");
+
+/** Empty catalog → illustrative sample plans behind a clear disclaimer. */
+export const SampleWhenEmpty: Story = {
+  render: () => (
+    <MonetizeKitProvider publishableKey="pk_demo" baseUrl="https://app.monetizekit.app" appearance="console">
+      <div style={{ padding: "2rem", background: "var(--mk-bg, #fff)" }}>
+        <PricingTable plans={[]} highlightPlan="Growth" />
+      </div>
+    </MonetizeKitProvider>
+  ),
+};
