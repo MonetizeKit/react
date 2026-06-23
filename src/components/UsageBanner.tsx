@@ -43,7 +43,7 @@ export function UsageBanner({
   const fraction = hasLimit ? Math.min(1, current / (limit as number)) : 0;
   const over = hasLimit && current > (limit as number);
   const warn = hasLimit && fraction >= warnAt;
-  const barColor = over || warn ? "var(--mk-primary)" : "var(--mk-accent)";
+  const barColor = over ? "var(--mk-danger)" : warn ? "var(--mk-warning)" : "var(--mk-accent)";
 
   return (
     <div style={{ ...tokensToStyle(tokens), ...bannerStyle }} data-mk-component="usage-banner">
@@ -71,7 +71,7 @@ export function UsageBanner({
         </div>
       ) : null}
       {over ? (
-        <span style={{ color: "var(--mk-primary)", fontSize: "0.75rem" }}>
+        <span style={{ color: "var(--mk-danger)", fontSize: "0.75rem" }}>
           Over included allotment — overage billed per usage pricing.
         </span>
       ) : null}

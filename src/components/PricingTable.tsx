@@ -1,7 +1,9 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { useMonetizeKit } from "../provider";
 import { tokensToStyle } from "../theme/tokens";
 import { describePlanPrice } from "../lib/format";
+import { SAMPLE_PLANS } from "../lib/sample-data";
+import { SampleNotice } from "./SampleNotice";
 import type { Plan } from "../types";
 
 export interface PricingTableProps {
@@ -14,6 +16,13 @@ export interface PricingTableProps {
   onSelectPlan?: (planId: string) => void;
   /** Where the Contact Sales CTA links (defaults to no-op). */
   onContactSales?: (planId: string) => void;
+  /**
+   * When there are no plans to show, render illustrative sample plans behind a
+   * clear disclaimer instead of an empty table. Defaults to `true`.
+   */
+  sampleWhenEmpty?: boolean;
+  /** Override the sample-data disclaimer copy. */
+  disclaimer?: ReactNode;
 }
 
 const wrapperStyle: CSSProperties = {
@@ -40,6 +49,8 @@ export function PricingTable({
   locale,
   onSelectPlan,
   onContactSales,
+  sampleWhenEmpty = true,
+  disclaimer,
 }: PricingTableProps) {
   const { client, tokens } = useMonetizeKit();
   const [plans, setPlans] = useState<Plan[] | null>(plansProp ?? null);
@@ -71,9 +82,22 @@ export function PricingTable({
     return <div aria-busy="true" style={{ color: "var(--mk-muted)" }}>Loading pricing…</div>;
   }
 
+  const isSample = plans.length === 0 && sampleWhenEmpty;
+  const effectivePlans = isSample ? SAMPLE_PLANS : plans;
+
+  if (effectivePlans.length === 0) {
+    return <div style={{ color: "var(--mk-muted)" }}>No plans available.</div>;
+  }
+
   return (
-    <div style={{ ...tokensToStyle(tokens), ...wrapperStyle }} data-mk-component="pricing-table">
-      {plans.map((plan) => {
+    <div
+      style={{ ...tokensToStyle(tokens), display: "flex", flexDirection: "column", gap: "1rem" }}
+      data-mk-component="pricing-table"
+      data-mk-sample={isSample ? "true" : undefined}
+    >
+      {isSample ? <SampleNotice>{disclaimer}</SampleNotice> : null}
+      <div style={wrapperStyle}>
+      {effectivePlans.map((plan) => {
         const price = describePlanPrice(plan, locale);
         const highlighted =
           highlightPlan != null &&
@@ -153,6 +177,7 @@ export function PricingTable({
           </div>
         );
       })}
+      </div>
     </div>
   );
 }
