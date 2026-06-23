@@ -1,7 +1,8 @@
 name: Release
 
 # Publishes @monetizekit/react to public npm via Changesets on merge to main.
-# Requires repo secret NPM_TOKEN (npm automation token for the @monetizekit org).
+# Requires NPM_TOKEN (npm automation token for the @monetizekit org), provided
+# as a secret on the "Production" environment (synced from Phase.dev).
 on:
   push:
     branches: [main]
@@ -16,6 +17,8 @@ jobs:
   release:
     name: Changesets Release
     runs-on: ubuntu-latest
+    # Bind to the Production environment so its NPM_TOKEN secret is in scope.
+    environment: Production
     steps:
       - uses: actions/checkout@v4
 
