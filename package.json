@@ -34,6 +34,7 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "check-entry": "node scripts/check-package-entry.mjs",
+    "smoke": "node scripts/install-smoke.mjs",
     "changeset": "changeset",
     "release": "changeset publish"
   },
