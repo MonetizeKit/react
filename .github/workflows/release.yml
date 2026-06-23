@@ -29,13 +29,28 @@ jobs:
       - name: Enable corepack
         run: corepack enable
 
+      - name: Check for npm token
+        id: npmtoken
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -n "${NPM_TOKEN}" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::NPM_TOKEN is not set; skipping publish. Configure it (Phase.dev sync to this repo or a repo/org Actions secret) to enable releases."
+          fi
+
       - name: Install dependencies
+        if: steps.npmtoken.outputs.present == 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Build
+        if: steps.npmtoken.outputs.present == 'true'
         run: pnpm build
 
       - name: Create release PR or publish
+        if: steps.npmtoken.outputs.present == 'true'
         uses: changesets/action@v1
         with:
           publish: pnpm exec changeset publish
