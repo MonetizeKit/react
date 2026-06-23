@@ -56,18 +56,51 @@ jobs:
       - name: Build Storybook
         run: pnpm build-storybook
 
+  install-smoke:
+    name: Published-package install smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build package
+        run: pnpm build
+
+      # Pack the real tarball, install it into a clean npm project, then
+      # type-check + server-render PricingTable as an external consumer.
+      - name: Install smoke (pack + consume)
+        run: node scripts/install-smoke.mjs
+
   required-checks:
     name: Required Checks Gate
     runs-on: ubuntu-latest
     if: ${{ always() }}
     needs:
       - build-and-test
+      - install-smoke
     steps:
       - name: Validate required checks passed
         shell: bash
         run: |
-          if [ "${{ needs.build-and-test.result }}" != "success" ]; then
-            echo "Required check failed: build-and-test => ${{ needs.build-and-test.result }}"
-            exit 1
-          fi
+          failed=0
+          for result in "build-and-test:${{ needs.build-and-test.result }}" "install-smoke:${{ needs.install-smoke.result }}"; do
+            name="${result%%:*}"
+            status="${result##*:}"
+            if [ "${status}" != "success" ]; then
+              echo "Required check failed: ${name} => ${status}"
+              failed=1
+            fi
+          done
+          if [ "${failed}" -ne 0 ]; then exit 1; fi
           echo "All required checks passed."
