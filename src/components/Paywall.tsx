@@ -12,6 +12,8 @@ export interface PaywallProps {
   description?: string;
   ctaLabel?: string;
   onUpgrade?: () => void;
+  /** Always render the locked upgrade prompt (for previews, no live customer). */
+  sample?: boolean;
 }
 
 const overlayStyle: CSSProperties = {
@@ -36,14 +38,15 @@ export function Paywall({
   description = "This feature isn't included in your current plan.",
   ctaLabel = "Upgrade",
   onUpgrade,
+  sample = false,
 }: PaywallProps) {
   const { allowed, loading } = useEntitlement(feature);
   const { tokens } = useMonetizeKit();
 
-  if (loading) {
+  if (!sample && loading) {
     return <div aria-busy="true" style={{ color: "var(--mk-muted)" }}>Checking access…</div>;
   }
-  if (allowed) {
+  if (!sample && allowed) {
     return <>{children}</>;
   }
 

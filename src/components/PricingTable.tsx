@@ -1,9 +1,10 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { useMonetizeKit } from "../provider";
 import { tokensToStyle } from "../theme/tokens";
-import { describePlanPrice } from "../lib/format";
+import { describePlanPrice, annualSavingsPercent } from "../lib/format";
 import { SAMPLE_PLANS } from "../lib/sample-data";
 import { SampleNotice } from "./SampleNotice";
+import { BillingCycleToggle } from "./BillingCycleToggle";
 import type { Plan } from "../types";
 
 export interface PricingTableProps {
@@ -11,7 +12,10 @@ export interface PricingTableProps {
   plans?: Plan[];
   /** Plan name to highlight as "Most Popular". */
   highlightPlan?: string;
+  /** Active billing cycle (controlled). With `showBillingToggle`, also the initial value. */
   billingCycle?: "monthly" | "annually";
+  /** Render an interactive Monthly/Yearly toggle above the cards. */
+  showBillingToggle?: boolean;
   locale?: string;
   onSelectPlan?: (planId: string) => void;
   /** Where the Contact Sales CTA links (defaults to no-op). */
@@ -46,6 +50,8 @@ const cardBase: CSSProperties = {
 export function PricingTable({
   plans: plansProp,
   highlightPlan,
+  billingCycle,
+  showBillingToggle = false,
   locale,
   onSelectPlan,
   onContactSales,
@@ -55,6 +61,11 @@ export function PricingTable({
   const { client, tokens } = useMonetizeKit();
   const [plans, setPlans] = useState<Plan[] | null>(plansProp ?? null);
   const [error, setError] = useState<Error | null>(null);
+  const [cycle, setCycle] = useState<"monthly" | "annually">(billingCycle ?? "monthly");
+
+  useEffect(() => {
+    if (billingCycle) setCycle(billingCycle);
+  }, [billingCycle]);
 
   useEffect(() => {
     if (plansProp) {
@@ -96,9 +107,19 @@ export function PricingTable({
       data-mk-sample={isSample ? "true" : undefined}
     >
       {isSample ? <SampleNotice>{disclaimer}</SampleNotice> : null}
+      {showBillingToggle ? (
+        <BillingCycleToggle
+          value={cycle}
+          onChange={setCycle}
+          savingsPercent={Math.max(
+            0,
+            ...effectivePlans.map((p) => annualSavingsPercent(p) ?? 0),
+          )}
+        />
+      ) : null}
       <div style={wrapperStyle}>
       {effectivePlans.map((plan) => {
-        const price = describePlanPrice(plan, locale);
+        const price = describePlanPrice(plan, locale, cycle);
         const highlighted =
           highlightPlan != null &&
           plan.name.toLowerCase() === highlightPlan.toLowerCase();

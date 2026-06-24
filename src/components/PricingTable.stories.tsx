@@ -91,6 +91,17 @@ export const Forest: Story = withProvider("forest");
 export const Sunset: Story = withProvider("sunset");
 export const Grape: Story = withProvider("grape");
 
+/** With an interactive Monthly/Yearly billing toggle. */
+export const WithBillingToggle: Story = {
+  render: () => (
+    <MonetizeKitProvider publishableKey="pk_demo" baseUrl="https://app.monetizekit.app" appearance="console">
+      <div style={{ padding: "2rem", background: "var(--mk-bg, #fff)" }}>
+        <PricingTable plans={plans} highlightPlan="Pro" showBillingToggle />
+      </div>
+    </MonetizeKitProvider>
+  ),
+};
+
 /** Empty catalog → illustrative sample plans behind a clear disclaimer. */
 export const SampleWhenEmpty: Story = {
   render: () => (
