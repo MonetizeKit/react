@@ -1,0 +1,56 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Introduction" />
+
+# @monetizekit/react
+
+Drop‑in, themeable React components for adding **pricing, paywalls, usage, and
+self‑service billing** to your product — powered by your
+[MonetizeKit](https://monetizekit.app) catalog and entitlements.
+
+This is the live component gallery. Use the sidebar to explore each component
+across every theme, and the **Controls** tab to try props interactively.
+
+## Install
+
+```bash
+npm install @monetizekit/react
+```
+
+## Quick start
+
+```tsx
+import { MonetizeKitProvider, PricingTable } from "@monetizekit/react";
+
+<MonetizeKitProvider
+  publishableKey="pk_live_xxx"
+  baseUrl="https://app.monetizekit.app"
+  appearance="light"
+>
+  <PricingTable highlightPlan="Pro" />
+</MonetizeKitProvider>;
+```
+
+The `publishableKey` (`pk_…`) is read‑only, scoped to your public catalog, and
+origin‑restricted — safe to ship in the browser.
+
+## What's inside
+
+- **PricingTable** — live plan cards, metered/graduated pricing, Monthly/Yearly toggle
+- **PricingComparison** — feature‑by‑feature “compare plans” table
+- **Paywall / EntitlementGate** — gate content on a live entitlement check
+- **UsageBanner / AlertBanner** — usage vs. allotment and in‑app notices
+- **CustomerPortal** — plan, usage, credits, team, and invoices
+- **BillingCycleToggle** — standalone Monthly/Yearly switch
+- Hooks: `useEntitlement`, `useUsage`, `useCredits`, `useMonetizeKit`
+
+## Theming
+
+Every component renders through `--mk-*` CSS variables. Pass a preset
+(`light`, `dark`, `memphis`, `dashboard`, `console`, `midnight`, `ocean`,
+`forest`, `sunset`, `grape`) or your own tokens to match your brand.
+
+## Links
+
+- npm: https://www.npmjs.com/package/@monetizekit/react
+- MonetizeKit: https://monetizekit.app

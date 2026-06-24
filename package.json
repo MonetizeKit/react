@@ -1,7 +1,7 @@
 {
   "name": "@monetizekit/react",
   "version": "0.4.0",
-  "description": "Themeable React components and hooks for MonetizeKit — PricingTable, Paywall, UsageBanner, CustomerPortal, EntitlementGate.",
+  "description": "Drop-in, themeable React components and hooks for pricing, paywalls, usage, and self-service billing — PricingTable, PricingComparison, Paywall, UsageBanner, AlertBanner, CustomerPortal, EntitlementGate.",
   "license": "MIT",
   "repository": {
     "type": "git",
