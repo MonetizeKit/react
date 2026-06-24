@@ -1,4 +1,4 @@
-import { type CSSProperties, type ReactNode } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import { useCredits } from "../hooks";
 import { useMonetizeKit } from "../provider";
 import { tokensToStyle } from "../theme/tokens";
@@ -14,9 +14,13 @@ import {
 } from "../lib/sample-data";
 import type { Invoice, TeamMember } from "../types";
 
+type Interval = "monthly" | "annually" | "one_time";
+
 export interface CustomerPortalProps {
   /** Current plan name to display. */
   planName?: string;
+  /** Recurring price shown in the plan header (e.g. { amount: 499, interval: "monthly" }). */
+  price?: { amount: number; interval?: Interval };
   /** Meters to surface usage for. */
   meterIds?: string[];
   /** Whether to show the credit balance card. */
@@ -28,6 +32,16 @@ export interface CustomerPortalProps {
   /** Show a billing-history (invoices) section. Defaults to on in `sample` mode. */
   showInvoices?: boolean;
   invoices?: Invoice[];
+  /** Upcoming invoice summary. */
+  nextInvoice?: { date: string; amount: number; currency?: string };
+  /** Render the sections as a tab bar (Plan/Usage/Credits/Team/Invoices) instead of stacked. */
+  tabbed?: boolean;
+  /** Self-serve actions in the Plan section. */
+  allowUpgrade?: boolean;
+  allowCancel?: boolean;
+  onUpgrade?: () => void;
+  onCancel?: () => void;
+  onViewInvoices?: () => void;
   /**
    * Render illustrative sample plan/usage/credit/team/invoice data behind a clear
    * disclaimer. Use for previews or a fresh workspace with no plans/products yet.
@@ -41,6 +55,8 @@ export interface CustomerPortalProps {
   currency?: string;
   onManageBilling?: () => void;
 }
+
+const INTERVAL_SUFFIX: Record<Interval, string> = { monthly: "/mo", annually: "/yr", one_time: "" };
 
 const containerStyle: CSSProperties = {
   border: "1px solid var(--mk-border)",
@@ -64,39 +80,6 @@ const cardStyle: CSSProperties = {
   flexDirection: "column",
   gap: "0.5rem",
 };
-
-/** A static usage row for sample mode (no live `useUsage` fetch). */
-function SampleUsageRow({
-  label,
-  current,
-  limit,
-  locale,
-}: {
-  label: string;
-  current: number;
-  limit: number | null;
-  locale?: string;
-}) {
-  const hasLimit = typeof limit === "number" && limit > 0;
-  const fraction = hasLimit ? Math.min(1, current / (limit as number)) : 0;
-  const barColor = fraction >= 0.8 ? "var(--mk-warning)" : "var(--mk-accent)";
-  return (
-    <div style={cardStyle}>
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem" }}>
-        <span style={{ fontWeight: 600 }}>{label}</span>
-        <span style={{ color: "var(--mk-muted)" }}>
-          {formatUnits(current, locale)}
-          {hasLimit ? ` / ${formatUnits(limit as number, locale)}` : ""}
-        </span>
-      </div>
-      {hasLimit ? (
-        <div style={{ height: 6, borderRadius: 999, background: "var(--mk-border)", overflow: "hidden" }}>
-          <div style={{ width: `${fraction * 100}%`, height: "100%", background: barColor }} />
-        </div>
-      ) : null}
-    </div>
-  );
-}
 
 const ROW_DIVIDER: CSSProperties = { borderTop: "1px solid var(--mk-border)" };
 
@@ -124,9 +107,48 @@ function StatusBadge({ label, color }: { label: string; color: string }) {
   );
 }
 
+function actionButton(variant: "primary" | "outline" | "ghost"): CSSProperties {
+  const base: CSSProperties = {
+    borderRadius: "var(--mk-radius)",
+    padding: "0.5rem 0.875rem",
+    fontWeight: 600,
+    fontSize: "0.8125rem",
+    cursor: "pointer",
+  };
+  if (variant === "primary") return { ...base, background: "var(--mk-primary)", color: "var(--mk-primary-fg)", border: "none" };
+  if (variant === "outline") return { ...base, background: "transparent", color: "var(--mk-card-fg)", border: "1px solid var(--mk-border)" };
+  return { ...base, background: "transparent", color: "var(--mk-muted)", border: "none" };
+}
+
+/** A static usage row (sample mode / no live `useUsage` fetch). */
+function SampleUsageRow({ label, current, limit, locale }: { label: string; current: number; limit: number | null; locale?: string }) {
+  const hasLimit = typeof limit === "number" && limit > 0;
+  const fraction = hasLimit ? Math.min(1, current / (limit as number)) : 0;
+  const barColor = fraction >= 0.9 ? "var(--mk-danger)" : fraction >= 0.7 ? "var(--mk-warning)" : "var(--mk-accent)";
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8125rem" }}>
+        <span style={{ color: "var(--mk-muted)" }}>{label}</span>
+        <span style={{ fontWeight: 500 }}>
+          {formatUnits(current, locale)}
+          {hasLimit ? ` / ${formatUnits(limit as number, locale)}` : ""}
+        </span>
+      </div>
+      {hasLimit ? (
+        <div style={{ height: 6, borderRadius: 999, background: "var(--mk-border)", overflow: "hidden" }}>
+          <div style={{ width: `${fraction * 100}%`, height: "100%", background: barColor }} />
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+type SectionId = "plan" | "usage" | "credits" | "team" | "invoices";
+
 /** A self-service portal: plan, usage, credits, team, and invoices. */
 export function CustomerPortal({
   planName,
+  price,
   meterIds,
   showCredits = true,
   showTeam,
@@ -134,18 +156,29 @@ export function CustomerPortal({
   seats,
   showInvoices,
   invoices,
+  nextInvoice,
+  tabbed = false,
+  allowUpgrade = false,
+  allowCancel = false,
+  onUpgrade,
+  onCancel,
+  onViewInvoices,
   sample = false,
   disclaimer,
   showBranding = false,
-  locale,
-  currency = "USD",
+  locale: localeProp,
+  currency: currencyProp,
   onManageBilling,
 }: CustomerPortalProps) {
-  const { tokens } = useMonetizeKit();
+  const { tokens, locale: ctxLocale, currency: ctxCurrency } = useMonetizeKit();
+  const locale = localeProp ?? ctxLocale;
+  const currency = currencyProp ?? ctxCurrency;
   const credits = useCredits();
 
   const resolvedPlanName = planName ?? (sample ? SAMPLE_PORTAL.planName : "Current plan");
+  const resolvedPrice = price ?? (sample ? SAMPLE_PORTAL.price : undefined);
   const resolvedMeterIds = meterIds ?? (sample ? [...SAMPLE_PORTAL.meterIds] : []);
+  const resolvedNextInvoice = nextInvoice ?? (sample ? SAMPLE_PORTAL.nextInvoice : undefined);
   const creditBalance = sample ? SAMPLE_CREDITS.balance : credits.balance;
   const creditCurrency = sample ? SAMPLE_CREDITS.currency : credits.currency;
   const creditLoading = sample ? false : credits.loading;
@@ -155,154 +188,190 @@ export function CustomerPortal({
   const resolvedSeats = seats ?? (sample ? { used: SAMPLE_TEAM.seats, max: SAMPLE_TEAM.maxSeats } : undefined);
   const invoicesEnabled = showInvoices ?? sample;
   const resolvedInvoices = invoices ?? (sample ? SAMPLE_INVOICES : []);
+  const upgradeEnabled = allowUpgrade || sample;
 
-  return (
-    <div
-      style={{ ...tokensToStyle(tokens), ...containerStyle }}
-      data-mk-component="customer-portal"
-      data-mk-sample={sample ? "true" : undefined}
-    >
-      {sample ? <SampleNotice>{disclaimer}</SampleNotice> : null}
-
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
+  const planSection = (
+    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem" }}>
         <div>
-          <div style={{ fontSize: "0.75rem", color: "var(--mk-muted)" }}>Plan</div>
+          <div style={{ fontSize: "0.75rem", color: "var(--mk-muted)" }}>Current plan</div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.125rem" }}>
-            <span style={{ fontSize: "1.125rem", fontWeight: 700 }}>{resolvedPlanName}</span>
-            <span
-              style={{
-                fontSize: "0.6875rem",
-                fontWeight: 600,
-                color: "var(--mk-success)",
-                border: "1px solid var(--mk-success)",
-                borderRadius: 999,
-                padding: "0.0625rem 0.5rem",
-              }}
-            >
-              Active
-            </span>
+            <span style={{ fontSize: "1.25rem", fontWeight: 700 }}>{resolvedPlanName}</span>
+            <StatusBadge label="Active" color="var(--mk-success)" />
           </div>
         </div>
-        <button
-          type="button"
-          onClick={onManageBilling}
-          style={{
-            background: "var(--mk-primary)",
-            color: "var(--mk-primary-fg)",
-            border: "none",
-            borderRadius: "var(--mk-radius)",
-            padding: "0.5rem 0.875rem",
-            fontWeight: 600,
-            cursor: "pointer",
-            whiteSpace: "nowrap",
-          }}
-        >
+        {resolvedPrice ? (
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: "0.75rem", color: "var(--mk-muted)" }}>Billing</div>
+            <div style={{ fontSize: "1.25rem", fontWeight: 700 }}>
+              {formatMoney(resolvedPrice.amount, currency, locale)}
+              <span style={{ fontSize: "0.75rem", color: "var(--mk-muted)", fontWeight: 400 }}>
+                {INTERVAL_SUFFIX[resolvedPrice.interval ?? "monthly"]}
+              </span>
+            </div>
+          </div>
+        ) : null}
+      </div>
+
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+        {invoicesEnabled ? (
+          <button type="button" style={actionButton("outline")} onClick={onViewInvoices}>
+            View invoices
+          </button>
+        ) : null}
+        {upgradeEnabled ? (
+          <button type="button" style={actionButton("primary")} onClick={onUpgrade}>
+            Upgrade plan
+          </button>
+        ) : null}
+        <button type="button" style={actionButton("outline")} onClick={onManageBilling}>
           Manage billing
         </button>
       </div>
 
+      {allowCancel ? (
+        <button type="button" style={{ ...actionButton("ghost"), alignSelf: "flex-start" }} onClick={onCancel}>
+          Cancel subscription
+        </button>
+      ) : null}
+
+      {resolvedNextInvoice ? (
+        <div style={{ ...cardStyle, flexDirection: "row", justifyContent: "space-between", alignItems: "center", background: "color-mix(in srgb, var(--mk-fg) 4%, transparent)" }}>
+          <div>
+            <div style={{ fontSize: "0.75rem", color: "var(--mk-muted)" }}>Next invoice</div>
+            <div style={{ fontWeight: 500 }}>{new Date(resolvedNextInvoice.date).toLocaleDateString(locale)}</div>
+          </div>
+          <span style={{ fontWeight: 700 }}>
+            {formatMoney(resolvedNextInvoice.amount, resolvedNextInvoice.currency ?? currency, locale)}
+          </span>
+        </div>
+      ) : null}
+    </div>
+  );
+
+  const usageSection = resolvedMeterIds.length > 0 ? (
+    <div style={cardStyle}>
+      <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>Usage this period</span>
       {sample
         ? resolvedMeterIds.map((meterId) => {
             const usage = SAMPLE_USAGE[meterId];
             if (!usage) return null;
-            return (
-              <SampleUsageRow
-                key={meterId}
-                label={meterId}
-                current={usage.current}
-                limit={usage.limit}
-                locale={locale}
-              />
-            );
+            return <SampleUsageRow key={meterId} label={meterId} current={usage.current} limit={usage.limit} locale={locale} />;
           })
-        : resolvedMeterIds.map((meterId) => (
-            <UsageBanner key={meterId} meterId={meterId} label={meterId} locale={locale} />
-          ))}
+        : resolvedMeterIds.map((meterId) => <UsageBanner key={meterId} meterId={meterId} label={meterId} locale={locale} />)}
+    </div>
+  ) : null;
 
-      {showCredits ? (
-        <div style={{ ...cardStyle, flexDirection: "row", justifyContent: "space-between" }}>
-          <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>Credits</span>
-          <span style={{ color: "var(--mk-muted)" }}>
-            {creditLoading ? "…" : formatMoney(creditBalance, creditCurrency ?? currency, locale)}
+  const creditsSection = showCredits ? (
+    <div style={{ ...cardStyle, flexDirection: "row", justifyContent: "space-between" }}>
+      <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>Credits</span>
+      <span style={{ color: "var(--mk-muted)" }}>
+        {creditLoading ? "…" : formatMoney(creditBalance, creditCurrency ?? currency, locale)}
+      </span>
+    </div>
+  ) : null;
+
+  const teamSection = teamEnabled ? (
+    <div style={cardStyle}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>Team</span>
+        {resolvedSeats ? (
+          <span style={{ color: "var(--mk-muted)", fontSize: "0.75rem" }}>
+            {resolvedSeats.used}/{resolvedSeats.max >= 9999 ? "Unlimited" : resolvedSeats.max} seats
           </span>
-        </div>
-      ) : null}
-
-      {teamEnabled ? (
-        <div style={cardStyle}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>Team</span>
-            {resolvedSeats ? (
-              <span style={{ color: "var(--mk-muted)", fontSize: "0.75rem" }}>
-                {resolvedSeats.used}/{resolvedSeats.max >= 9999 ? "Unlimited" : resolvedSeats.max} seats
-              </span>
-            ) : null}
+        ) : null}
+      </div>
+      {resolvedTeam.length === 0 ? (
+        <span style={{ color: "var(--mk-muted)", fontSize: "0.8125rem" }}>No team members.</span>
+      ) : (
+        resolvedTeam.map((member, i) => (
+          <div
+            key={member.email}
+            style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.75rem", fontSize: "0.8125rem", paddingTop: i === 0 ? 0 : "0.5rem", ...(i === 0 ? {} : ROW_DIVIDER) }}
+          >
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontWeight: 600 }}>{member.name}</div>
+              <div style={{ color: "var(--mk-muted)", fontSize: "0.75rem" }}>{member.email}</div>
+            </div>
+            <StatusBadge label={member.role} color="var(--mk-muted)" />
           </div>
-          {resolvedTeam.length === 0 ? (
-            <span style={{ color: "var(--mk-muted)", fontSize: "0.8125rem" }}>No team members.</span>
-          ) : (
-            resolvedTeam.map((member, i) => (
-              <div
-                key={member.email}
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: "0.75rem",
-                  fontSize: "0.8125rem",
-                  paddingTop: i === 0 ? 0 : "0.5rem",
-                  ...(i === 0 ? {} : ROW_DIVIDER),
-                }}
-              >
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontWeight: 600 }}>{member.name}</div>
-                  <div style={{ color: "var(--mk-muted)", fontSize: "0.75rem" }}>{member.email}</div>
-                </div>
-                <StatusBadge label={member.role} color="var(--mk-muted)" />
-              </div>
-            ))
-          )}
-        </div>
-      ) : null}
+        ))
+      )}
+    </div>
+  ) : null;
 
-      {invoicesEnabled ? (
-        <div style={cardStyle}>
-          <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>Invoices</span>
-          {resolvedInvoices.length === 0 ? (
-            <span style={{ color: "var(--mk-muted)", fontSize: "0.8125rem" }}>No invoices yet.</span>
-          ) : (
-            resolvedInvoices.map((invoice, i) => (
-              <div
-                key={invoice.id}
+  const invoicesSection = invoicesEnabled ? (
+    <div style={cardStyle}>
+      <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>Invoices</span>
+      {resolvedInvoices.length === 0 ? (
+        <span style={{ color: "var(--mk-muted)", fontSize: "0.8125rem" }}>No invoices yet.</span>
+      ) : (
+        resolvedInvoices.map((invoice, i) => (
+          <div
+            key={invoice.id}
+            style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.75rem", fontSize: "0.8125rem", paddingTop: i === 0 ? 0 : "0.5rem", ...(i === 0 ? {} : ROW_DIVIDER) }}
+          >
+            <span style={{ fontWeight: 500 }}>{new Date(invoice.date).toLocaleDateString(locale)}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <span style={{ fontWeight: 600 }}>{formatMoney(invoice.amount, invoice.currency, locale)}</span>
+              <StatusBadge label={invoice.status} color={INVOICE_STATUS_COLOR[invoice.status]} />
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  ) : null;
+
+  const sections: { id: SectionId; label: string; node: ReactNode }[] = [
+    { id: "plan", label: "Plan", node: planSection },
+    ...(usageSection ? [{ id: "usage" as const, label: "Usage", node: usageSection }] : []),
+    ...(creditsSection ? [{ id: "credits" as const, label: "Credits", node: creditsSection }] : []),
+    ...(teamSection ? [{ id: "team" as const, label: "Team", node: teamSection }] : []),
+    ...(invoicesSection ? [{ id: "invoices" as const, label: "Invoices", node: invoicesSection }] : []),
+  ];
+
+  const [activeTab, setActiveTab] = useState<SectionId>("plan");
+  const active = sections.find((s) => s.id === activeTab) ?? sections[0]!;
+
+  return (
+    <div style={{ ...tokensToStyle(tokens), ...containerStyle }} data-mk-component="customer-portal" data-mk-sample={sample ? "true" : undefined}>
+      {sample ? <SampleNotice>{disclaimer}</SampleNotice> : null}
+
+      {tabbed ? (
+        <>
+          <div style={{ display: "flex", gap: "0.125rem", padding: "0.25rem", borderRadius: "var(--mk-radius)", background: "color-mix(in srgb, var(--mk-fg) 6%, transparent)", overflowX: "auto" }} role="tablist">
+            {sections.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                role="tab"
+                aria-selected={s.id === active.id}
+                onClick={() => setActiveTab(s.id)}
                 style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: "0.75rem",
+                  border: "none",
+                  cursor: "pointer",
+                  borderRadius: "var(--mk-radius)",
+                  padding: "0.375rem 0.75rem",
                   fontSize: "0.8125rem",
-                  paddingTop: i === 0 ? 0 : "0.5rem",
-                  ...(i === 0 ? {} : ROW_DIVIDER),
+                  fontWeight: 600,
+                  whiteSpace: "nowrap",
+                  background: s.id === active.id ? "var(--mk-card)" : "transparent",
+                  color: s.id === active.id ? "var(--mk-card-fg)" : "var(--mk-muted)",
+                  boxShadow: s.id === active.id ? "var(--mk-shadow)" : "none",
                 }}
               >
-                <span style={{ fontWeight: 500 }}>
-                  {new Date(invoice.date).toLocaleDateString(locale)}
-                </span>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  <span style={{ fontWeight: 600 }}>
-                    {formatMoney(invoice.amount, invoice.currency, locale)}
-                  </span>
-                  <StatusBadge label={invoice.status} color={INVOICE_STATUS_COLOR[invoice.status]} />
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      ) : null}
+                {s.label}
+              </button>
+            ))}
+          </div>
+          <div role="tabpanel">{active.node}</div>
+        </>
+      ) : (
+        sections.map((s) => <div key={s.id}>{s.node}</div>)
+      )}
 
       {showBranding ? (
-        <div style={{ textAlign: "center", fontSize: "0.625rem", color: "var(--mk-muted)" }}>
-          Powered by MonetizeKit
-        </div>
+        <div style={{ textAlign: "center", fontSize: "0.625rem", color: "var(--mk-muted)" }}>Powered by MonetizeKit</div>
       ) : null}
     </div>
   );

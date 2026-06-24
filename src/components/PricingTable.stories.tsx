@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { MonetizeKitProvider } from "../provider";
 import { PricingTable } from "./PricingTable";
-import type { Appearance } from "../theme/tokens";
 import type { Plan } from "../types";
 
+// Theme / locale / currency are controlled from the toolbar (see .storybook
+// globals); the decorator provides the MonetizeKitProvider.
 const plans: Plan[] = [
   {
     id: "plan_free",
@@ -19,7 +19,10 @@ const plans: Plan[] = [
     id: "plan_pro",
     name: "Pro",
     description: "Product-led monetization at scale",
-    pricing: [{ type: "flat", amount: 99, currency: "USD", interval: "monthly" }],
+    pricing: [
+      { type: "flat", amount: 499, currency: "USD", interval: "monthly" },
+      { type: "flat", amount: 4990, currency: "USD", interval: "annually" },
+    ],
     entitlements: [
       { featureKey: "max_customers", featureDisplayName: "Customers", type: "limit", value: 10000 },
       { featureKey: "stripe", featureDisplayName: "Stripe Integration", type: "boolean", value: true },
@@ -30,7 +33,8 @@ const plans: Plan[] = [
     name: "Scale",
     description: "Volume-based capacity pricing",
     pricing: [
-      { type: "flat", amount: 299, currency: "USD", interval: "monthly" },
+      { type: "flat", amount: 999, currency: "USD", interval: "monthly" },
+      { type: "flat", amount: 9990, currency: "USD", interval: "annually" },
       {
         type: "usage",
         amount: 0,
@@ -38,9 +42,9 @@ const plans: Plan[] = [
         interval: "monthly",
         meterId: "meter_mk_mtc",
         meterDisplayName: "Tracked Customers",
-        includedUnits: 5000,
+        includedUnits: 25000,
         tierMode: "graduated",
-        tieredPricing: [{ upTo: 25000, unitPrice: 0.015 }, { upTo: null, unitPrice: 0.006 }],
+        tieredPricing: [{ upTo: 100000, unitPrice: 0.012 }, { upTo: null, unitPrice: 0.006 }],
       },
     ],
     entitlements: [
@@ -53,62 +57,22 @@ const plans: Plan[] = [
     description: "Governance, scale, and controls",
     tags: ["contact_sales"],
     pricing: [],
-    entitlements: [
-      { featureKey: "sso", featureDisplayName: "SSO / SAML", type: "boolean", value: true },
-    ],
+    entitlements: [{ featureKey: "sso", featureDisplayName: "SSO / SAML", type: "boolean", value: true }],
   },
 ];
 
 const meta: Meta<typeof PricingTable> = {
   title: "Components/PricingTable",
   component: PricingTable,
-  parameters: { layout: "fullscreen" },
+  args: { plans, highlightPlan: "Pro" },
 };
 export default meta;
 
 type Story = StoryObj<typeof PricingTable>;
 
-function withProvider(appearance: Appearance): Story {
-  return {
-    render: () => (
-      <MonetizeKitProvider publishableKey="pk_demo" baseUrl="https://app.monetizekit.app" appearance={appearance}>
-        <div style={{ padding: "2rem", background: "var(--mk-bg, #fff)" }}>
-          <PricingTable plans={plans} highlightPlan="Pro" />
-        </div>
-      </MonetizeKitProvider>
-    ),
-  };
-}
+export const Default: Story = {};
 
-export const Light: Story = withProvider("light");
-export const Dark: Story = withProvider("dark");
-export const Memphis: Story = withProvider("memphis");
-export const Dashboard: Story = withProvider("dashboard");
-export const Console: Story = withProvider("console");
-export const Midnight: Story = withProvider("midnight");
-export const Ocean: Story = withProvider("ocean");
-export const Forest: Story = withProvider("forest");
-export const Sunset: Story = withProvider("sunset");
-export const Grape: Story = withProvider("grape");
-
-/** With an interactive Monthly/Yearly billing toggle. */
-export const WithBillingToggle: Story = {
-  render: () => (
-    <MonetizeKitProvider publishableKey="pk_demo" baseUrl="https://app.monetizekit.app" appearance="console">
-      <div style={{ padding: "2rem", background: "var(--mk-bg, #fff)" }}>
-        <PricingTable plans={plans} highlightPlan="Pro" showBillingToggle />
-      </div>
-    </MonetizeKitProvider>
-  ),
-};
+export const WithBillingToggle: Story = { args: { showBillingToggle: true } };
 
 /** Empty catalog → illustrative sample plans behind a clear disclaimer. */
-export const SampleWhenEmpty: Story = {
-  render: () => (
-    <MonetizeKitProvider publishableKey="pk_demo" baseUrl="https://app.monetizekit.app" appearance="console">
-      <div style={{ padding: "2rem", background: "var(--mk-bg, #fff)" }}>
-        <PricingTable plans={[]} highlightPlan="Growth" />
-      </div>
-    </MonetizeKitProvider>
-  ),
-};
+export const SampleWhenEmpty: Story = { args: { plans: [], highlightPlan: "Growth" } };

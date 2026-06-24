@@ -29,11 +29,12 @@ const bannerStyle: CSSProperties = {
 export function UsageBanner({
   meterId,
   label = "Usage",
-  locale,
+  locale: localeProp,
   warnAt = 0.8,
 }: UsageBannerProps) {
   const { current, limit, loading } = useUsage(meterId);
-  const { tokens } = useMonetizeKit();
+  const { tokens, locale: ctxLocale } = useMonetizeKit();
+  const locale = localeProp ?? ctxLocale;
 
   if (loading) {
     return <div aria-busy="true" style={{ color: "var(--mk-muted)" }}>Loading usage…</div>;

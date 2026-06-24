@@ -16,6 +16,10 @@ export interface MonetizeKitContextValue {
   customerId?: string;
   appearance: Appearance;
   tokens: ThemeTokens;
+  /** Default BCP-47 locale for number/currency/date formatting. */
+  locale?: string;
+  /** Default ISO-4217 currency for money formatting. */
+  currency: string;
 }
 
 const MonetizeKitContext = createContext<MonetizeKitContextValue | null>(null);
@@ -31,6 +35,10 @@ export interface MonetizeKitProviderProps {
   customerId?: string;
   /** Theme preset name or token overrides. */
   appearance?: Appearance;
+  /** Default BCP-47 locale applied to all components (override per-component via props). */
+  locale?: string;
+  /** Default ISO-4217 currency applied to all components (override per-component via props). */
+  currency?: string;
   children: ReactNode;
 }
 
@@ -40,6 +48,8 @@ export function MonetizeKitProvider({
   customerToken,
   customerId,
   appearance = "light",
+  locale,
+  currency = "USD",
   children,
 }: MonetizeKitProviderProps) {
   const value = useMemo<MonetizeKitContextValue>(() => {
@@ -48,8 +58,10 @@ export function MonetizeKitProvider({
       customerId,
       appearance,
       tokens: resolveTokens(appearance),
+      locale,
+      currency,
     };
-  }, [publishableKey, baseUrl, customerToken, customerId, appearance]);
+  }, [publishableKey, baseUrl, customerToken, customerId, appearance, locale, currency]);
 
   return (
     <MonetizeKitContext.Provider value={value}>

@@ -78,11 +78,12 @@ export function PricingComparison({
   groups,
   highlightPlan,
   billingCycle = "monthly",
-  locale,
+  locale: localeProp,
   sampleWhenEmpty = true,
   disclaimer,
 }: PricingComparisonProps) {
-  const { client, tokens } = useMonetizeKit();
+  const { client, tokens, locale: ctxLocale } = useMonetizeKit();
+  const locale = localeProp ?? ctxLocale;
   const [plans, setPlans] = useState<Plan[] | null>(plansProp ?? null);
   const [error, setError] = useState<Error | null>(null);
 
