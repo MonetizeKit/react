@@ -3,8 +3,9 @@ import { MonetizeKitProvider } from "../src/provider";
 import {
   resolveTokens,
   tokensToStyle,
-  THEME_PRESET_NAMES,
-  type ThemePresetName,
+  THEME_NAMES,
+  type ThemeName,
+  type ThemeMode,
 } from "../src/theme/tokens";
 
 /**
@@ -20,12 +21,26 @@ const preview: Preview = {
   },
   globalTypes: {
     theme: {
-      description: "Theme preset",
-      defaultValue: "light",
+      description: "Brand theme",
+      defaultValue: "default",
       toolbar: {
         title: "Theme",
         icon: "paintbrush",
-        items: THEME_PRESET_NAMES.map((t) => ({ value: t, title: t })),
+        items: THEME_NAMES.map((t) => ({ value: t, title: t })),
+        dynamicTitle: true,
+      },
+    },
+    mode: {
+      description: "Color mode",
+      defaultValue: "light",
+      toolbar: {
+        title: "Mode",
+        icon: "contrast",
+        items: [
+          { value: "light", title: "Light" },
+          { value: "dark", title: "Dark" },
+          { value: "system", title: "System" },
+        ],
         dynamicTitle: true,
       },
     },
@@ -52,20 +67,26 @@ const preview: Preview = {
   },
   decorators: [
     (Story, context) => {
-      const theme = (context.globals.theme as ThemePresetName) ?? "light";
+      const theme = (context.globals.theme as ThemeName) ?? "default";
+      const mode = (context.globals.mode as ThemeMode) ?? "light";
       const locale = (context.globals.locale as string) ?? "en-US";
       const currency = (context.globals.currency as string) ?? "USD";
+      const appearance = { theme, mode };
+      const prefersDark =
+        typeof window !== "undefined" && window.matchMedia
+          ? window.matchMedia("(prefers-color-scheme: dark)").matches
+          : false;
       return (
         <MonetizeKitProvider
           publishableKey="pk_demo"
           baseUrl="https://app.monetizekit.app"
-          appearance={theme}
+          appearance={appearance}
           locale={locale}
           currency={currency}
         >
           <div
             style={{
-              ...tokensToStyle(resolveTokens(theme)),
+              ...tokensToStyle(resolveTokens(appearance, prefersDark)),
               background: "var(--mk-bg)",
               color: "var(--mk-fg)",
               padding: "2rem",

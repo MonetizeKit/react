@@ -93,23 +93,27 @@ Scoped to the customer you pass to the provider (`customerId` / `customerToken`)
 
 ## Theming
 
-Pass `appearance` to the provider — a built‑in preset or your own tokens:
+Pick a **theme** (brand identity) and a **mode** (`light` / `dark` / `system`):
 
 ```tsx
-// A preset…
-<MonetizeKitProvider appearance="dark" /* … */ />
+// Theme + mode (system follows the OS via prefers-color-scheme)
+<MonetizeKitProvider appearance={{ theme: "ocean", mode: "system" }} /* … */ />
 
-// …or override specific design tokens on top of a preset
+// Override specific design tokens on top of the resolved variant
 <MonetizeKitProvider
-  appearance={{ preset: "light", tokens: { colorPrimary: "#7c3aed", radius: "1rem" } }}
+  appearance={{ theme: "default", mode: "dark", tokens: { colorPrimary: "#7c3aed", radius: "1rem" } }}
 />
 ```
 
-Built‑in presets: `light`, `dark`, `memphis`, `dashboard`, `console`,
-`midnight`, `ocean`, `forest`, `sunset`, `grape` (see them all in the
-[live gallery](https://ui.monetizekit.app)). Components render via `--mk-*` CSS
-custom properties, so they inherit your typography and adapt to your design
-system. Import `THEME_PRESETS` / `THEME_PRESET_NAMES` to build a theme picker.
+Built‑in themes — each with a hand‑tuned **light + dark** variant: `default`,
+`dashboard`, `memphis`, `slate`, `ocean`, `forest`, `sunset`, `grape`
+(switch theme + mode in the [live gallery](https://ui.monetizekit.app)).
+Components render via `--mk-*` CSS custom properties, so they inherit your
+typography and adapt to your design system. Import `THEMES` / `THEME_NAMES` to
+build a theme picker.
+
+> Fixed preset names (`light`, `dark`, `memphis`, `console`, …) are still
+> accepted by `appearance` for backward compatibility.
 
 ## Preview & empty states
 

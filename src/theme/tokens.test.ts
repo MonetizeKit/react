@@ -2,8 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   resolveTokens,
   tokensToStyle,
+  appearanceMode,
   THEME_PRESETS,
   THEME_PRESET_NAMES,
+  THEMES,
+  THEME_NAMES,
   type ThemeTokens,
 } from "./tokens";
 
@@ -86,5 +89,43 @@ describe("theme presets (multitude)", () => {
     expect(c.colorSuccess).toBe("#34d399");
     expect(c.colorWarning).toBe("#fbbf24");
     expect(c.colorDanger).toBe("#f87171");
+  });
+});
+
+describe("theme light/dark modes", () => {
+  it("exposes 8 brand themes, each with a light + dark variant", () => {
+    expect(THEME_NAMES).toEqual([
+      "default", "dashboard", "memphis", "slate", "ocean", "forest", "sunset", "grape",
+    ]);
+    for (const name of THEME_NAMES) {
+      expect(THEMES[name].light).toBeTruthy();
+      expect(THEMES[name].dark).toBeTruthy();
+      // light and dark differ (different backgrounds)
+      expect(THEMES[name].light.colorBackground).not.toBe(THEMES[name].dark.colorBackground);
+    }
+  });
+
+  it("resolveTokens picks the variant by mode", () => {
+    expect(resolveTokens({ theme: "memphis", mode: "light" })).toEqual(THEMES.memphis.light);
+    expect(resolveTokens({ theme: "memphis", mode: "dark" })).toEqual(THEMES.memphis.dark);
+    // mode defaults to light
+    expect(resolveTokens({ theme: "ocean" })).toEqual(THEMES.ocean.light);
+  });
+
+  it("system mode follows the OS preference flag", () => {
+    expect(resolveTokens({ theme: "slate", mode: "system" }, true)).toEqual(THEMES.slate.dark);
+    expect(resolveTokens({ theme: "slate", mode: "system" }, false)).toEqual(THEMES.slate.light);
+  });
+
+  it("merges token overrides onto the resolved variant", () => {
+    const t = resolveTokens({ theme: "grape", mode: "dark", tokens: { radius: "0" } });
+    expect(t.radius).toBe("0");
+    expect(t.colorPrimary).toBe(THEMES.grape.dark.colorPrimary);
+  });
+
+  it("appearanceMode reports mode for theme forms, undefined for fixed presets", () => {
+    expect(appearanceMode({ theme: "ocean", mode: "system" })).toBe("system");
+    expect(appearanceMode({ theme: "ocean" })).toBe("light");
+    expect(appearanceMode("memphis")).toBeUndefined();
   });
 });

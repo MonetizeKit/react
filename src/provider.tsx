@@ -1,15 +1,32 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useMemo,
+  useState,
   type ReactNode,
 } from "react";
 import { MonetizeKitClient } from "./lib/client";
 import {
   resolveTokens,
+  appearanceMode,
   type Appearance,
   type ThemeTokens,
 } from "./theme/tokens";
+
+/** Track the OS dark-mode preference (only when `system` mode is in use). */
+function usePrefersDark(enabled: boolean): boolean {
+  const [prefersDark, setPrefersDark] = useState(false);
+  useEffect(() => {
+    if (!enabled || typeof window === "undefined" || !window.matchMedia) return;
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    setPrefersDark(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setPrefersDark(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, [enabled]);
+  return prefersDark;
+}
 
 export interface MonetizeKitContextValue {
   client: MonetizeKitClient;
@@ -52,16 +69,17 @@ export function MonetizeKitProvider({
   currency = "USD",
   children,
 }: MonetizeKitProviderProps) {
+  const prefersDark = usePrefersDark(appearanceMode(appearance) === "system");
   const value = useMemo<MonetizeKitContextValue>(() => {
     return {
       client: new MonetizeKitClient({ publishableKey, baseUrl, customerToken }),
       customerId,
       appearance,
-      tokens: resolveTokens(appearance),
+      tokens: resolveTokens(appearance, prefersDark),
       locale,
       currency,
     };
-  }, [publishableKey, baseUrl, customerToken, customerId, appearance, locale, currency]);
+  }, [publishableKey, baseUrl, customerToken, customerId, appearance, prefersDark, locale, currency]);
 
   return (
     <MonetizeKitContext.Provider value={value}>

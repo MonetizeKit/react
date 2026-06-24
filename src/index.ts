@@ -38,12 +38,18 @@ export { SampleNotice, type SampleNoticeProps } from "./components/SampleNotice"
 
 // Theming
 export {
+  THEMES,
+  THEME_NAMES,
   THEME_PRESETS,
   THEME_PRESET_NAMES,
   resolveTokens,
   tokensToStyle,
+  appearanceMode,
   type Appearance,
   type ThemeTokens,
+  type ThemeVariants,
+  type ThemeName,
+  type ThemeMode,
   type ThemePresetName,
 } from "./theme/tokens";
 
