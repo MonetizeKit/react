@@ -5,7 +5,14 @@ import { tokensToStyle } from "../theme/tokens";
 import { formatMoney, formatUnits } from "../lib/format";
 import { UsageBanner } from "./UsageBanner";
 import { SampleNotice } from "./SampleNotice";
-import { SAMPLE_CREDITS, SAMPLE_PORTAL, SAMPLE_USAGE } from "../lib/sample-data";
+import {
+  SAMPLE_CREDITS,
+  SAMPLE_INVOICES,
+  SAMPLE_PORTAL,
+  SAMPLE_TEAM,
+  SAMPLE_USAGE,
+} from "../lib/sample-data";
+import type { Invoice, TeamMember } from "../types";
 
 export interface CustomerPortalProps {
   /** Current plan name to display. */
@@ -14,9 +21,16 @@ export interface CustomerPortalProps {
   meterIds?: string[];
   /** Whether to show the credit balance card. */
   showCredits?: boolean;
+  /** Show a team/seats section. Defaults to on in `sample` mode. */
+  showTeam?: boolean;
+  teamMembers?: TeamMember[];
+  seats?: { used: number; max: number };
+  /** Show a billing-history (invoices) section. Defaults to on in `sample` mode. */
+  showInvoices?: boolean;
+  invoices?: Invoice[];
   /**
-   * Render illustrative sample plan/usage/credit data behind a clear disclaimer.
-   * Use for previews or a fresh workspace with no plans/products defined yet.
+   * Render illustrative sample plan/usage/credit/team/invoice data behind a clear
+   * disclaimer. Use for previews or a fresh workspace with no plans/products yet.
    */
   sample?: boolean;
   /** Override the sample-data disclaimer copy. */
@@ -84,11 +98,42 @@ function SampleUsageRow({
   );
 }
 
-/** A self-service portal: current plan, usage meters, and credit balance. */
+const ROW_DIVIDER: CSSProperties = { borderTop: "1px solid var(--mk-border)" };
+
+const INVOICE_STATUS_COLOR: Record<Invoice["status"], string> = {
+  paid: "var(--mk-success)",
+  pending: "var(--mk-warning)",
+  overdue: "var(--mk-danger)",
+};
+
+function StatusBadge({ label, color }: { label: string; color: string }) {
+  return (
+    <span
+      style={{
+        fontSize: "0.6875rem",
+        fontWeight: 600,
+        textTransform: "capitalize",
+        color,
+        border: `1px solid ${color}`,
+        borderRadius: 999,
+        padding: "0.0625rem 0.5rem",
+      }}
+    >
+      {label}
+    </span>
+  );
+}
+
+/** A self-service portal: plan, usage, credits, team, and invoices. */
 export function CustomerPortal({
   planName,
   meterIds,
   showCredits = true,
+  showTeam,
+  teamMembers,
+  seats,
+  showInvoices,
+  invoices,
   sample = false,
   disclaimer,
   showBranding = false,
@@ -104,6 +149,12 @@ export function CustomerPortal({
   const creditBalance = sample ? SAMPLE_CREDITS.balance : credits.balance;
   const creditCurrency = sample ? SAMPLE_CREDITS.currency : credits.currency;
   const creditLoading = sample ? false : credits.loading;
+
+  const teamEnabled = showTeam ?? sample;
+  const resolvedTeam = teamMembers ?? (sample ? SAMPLE_TEAM.members : []);
+  const resolvedSeats = seats ?? (sample ? { used: SAMPLE_TEAM.seats, max: SAMPLE_TEAM.maxSeats } : undefined);
+  const invoicesEnabled = showInvoices ?? sample;
+  const resolvedInvoices = invoices ?? (sample ? SAMPLE_INVOICES : []);
 
   return (
     <div
@@ -174,6 +225,77 @@ export function CustomerPortal({
           <span style={{ color: "var(--mk-muted)" }}>
             {creditLoading ? "…" : formatMoney(creditBalance, creditCurrency ?? currency, locale)}
           </span>
+        </div>
+      ) : null}
+
+      {teamEnabled ? (
+        <div style={cardStyle}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>Team</span>
+            {resolvedSeats ? (
+              <span style={{ color: "var(--mk-muted)", fontSize: "0.75rem" }}>
+                {resolvedSeats.used}/{resolvedSeats.max >= 9999 ? "Unlimited" : resolvedSeats.max} seats
+              </span>
+            ) : null}
+          </div>
+          {resolvedTeam.length === 0 ? (
+            <span style={{ color: "var(--mk-muted)", fontSize: "0.8125rem" }}>No team members.</span>
+          ) : (
+            resolvedTeam.map((member, i) => (
+              <div
+                key={member.email}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: "0.75rem",
+                  fontSize: "0.8125rem",
+                  paddingTop: i === 0 ? 0 : "0.5rem",
+                  ...(i === 0 ? {} : ROW_DIVIDER),
+                }}
+              >
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontWeight: 600 }}>{member.name}</div>
+                  <div style={{ color: "var(--mk-muted)", fontSize: "0.75rem" }}>{member.email}</div>
+                </div>
+                <StatusBadge label={member.role} color="var(--mk-muted)" />
+              </div>
+            ))
+          )}
+        </div>
+      ) : null}
+
+      {invoicesEnabled ? (
+        <div style={cardStyle}>
+          <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>Invoices</span>
+          {resolvedInvoices.length === 0 ? (
+            <span style={{ color: "var(--mk-muted)", fontSize: "0.8125rem" }}>No invoices yet.</span>
+          ) : (
+            resolvedInvoices.map((invoice, i) => (
+              <div
+                key={invoice.id}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: "0.75rem",
+                  fontSize: "0.8125rem",
+                  paddingTop: i === 0 ? 0 : "0.5rem",
+                  ...(i === 0 ? {} : ROW_DIVIDER),
+                }}
+              >
+                <span style={{ fontWeight: 500 }}>
+                  {new Date(invoice.date).toLocaleDateString(locale)}
+                </span>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <span style={{ fontWeight: 600 }}>
+                    {formatMoney(invoice.amount, invoice.currency, locale)}
+                  </span>
+                  <StatusBadge label={invoice.status} color={INVOICE_STATUS_COLOR[invoice.status]} />
+                </div>
+              </div>
+            ))
+          )}
         </div>
       ) : null}
 

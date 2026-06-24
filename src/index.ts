@@ -37,6 +37,8 @@ export {
   SAMPLE_PLANS,
   SAMPLE_USAGE,
   SAMPLE_CREDITS,
+  SAMPLE_TEAM,
+  SAMPLE_INVOICES,
   SAMPLE_PORTAL,
   SAMPLE_NOTICE_TEXT,
 } from "./lib/sample-data";
@@ -60,4 +62,6 @@ export type {
   EntitlementResult,
   UsageResult,
   CreditBalance,
+  TeamMember,
+  Invoice,
 } from "./types";
