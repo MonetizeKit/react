@@ -9,8 +9,23 @@ export { useEntitlement, useUsage, useCredits } from "./hooks";
 
 // Components
 export { PricingTable, type PricingTableProps } from "./components/PricingTable";
+export {
+  PricingComparison,
+  type PricingComparisonProps,
+  type ComparisonFeatureGroup,
+} from "./components/PricingComparison";
+export {
+  BillingCycleToggle,
+  type BillingCycleToggleProps,
+} from "./components/BillingCycleToggle";
 export { Paywall, type PaywallProps } from "./components/Paywall";
 export { UsageBanner, type UsageBannerProps } from "./components/UsageBanner";
+export {
+  AlertBanner,
+  type AlertBannerProps,
+  type AlertBannerVariant,
+  type BannerAction,
+} from "./components/AlertBanner";
 export {
   CustomerPortal,
   type CustomerPortalProps,

@@ -44,6 +44,7 @@ const INTERVAL_SUFFIX: Record<PricingTerm["interval"], string> = {
 export function describePlanPrice(
   plan: Plan,
   locale?: string,
+  billingCycle: "monthly" | "annually" = "monthly",
 ): PriceDisplay {
   const pricing = plan.pricing ?? [];
   const contactSales =
@@ -52,7 +53,13 @@ export function describePlanPrice(
     return { headline: null, contactSales: true };
   }
 
-  const base = pricing.find((t) => t.type === "flat");
+  const flats = pricing.filter((t) => t.type === "flat");
+  // Prefer the flat term matching the requested cycle; fall back to monthly,
+  // then to whatever flat term exists.
+  const base =
+    flats.find((t) => t.interval === billingCycle) ??
+    flats.find((t) => t.interval === "monthly") ??
+    flats[0];
   const hasUsage = pricing.some((t) => t.type === "usage");
   const currency = base?.currency ?? pricing[0]?.currency ?? "USD";
   const interval = base?.interval ?? pricing[0]?.interval ?? "monthly";
@@ -64,6 +71,19 @@ export function describePlanPrice(
     caption: hasUsage ? "+ usage" : undefined,
     contactSales: false,
   };
+}
+
+/**
+ * Percentage saved by paying annually vs 12× the monthly price, or null when a
+ * plan lacks both terms or has no real saving. Used for the "Save X%" badge.
+ */
+export function annualSavingsPercent(plan: Plan): number | null {
+  const flats = (plan.pricing ?? []).filter((t) => t.type === "flat");
+  const monthly = flats.find((t) => t.interval === "monthly");
+  const annual = flats.find((t) => t.interval === "annually");
+  if (!monthly || !annual || monthly.amount <= 0) return null;
+  const pct = Math.round((1 - annual.amount / (monthly.amount * 12)) * 100);
+  return pct > 0 ? pct : null;
 }
 
 /** Human-readable description of a usage term's metered tiers. */
