@@ -4,7 +4,7 @@
  * plans or products defined). Always paired with a visible <SampleNotice/> so it
  * is never mistaken for live data.
  */
-import type { CreditBalance, Plan, UsageResult } from "../types";
+import type { CreditBalance, Invoice, Plan, TeamMember, UsageResult } from "../types";
 
 export const SAMPLE_PLANS: Plan[] = [
   {
@@ -22,7 +22,7 @@ export const SAMPLE_PLANS: Plan[] = [
     id: "sample_pro",
     name: "Growth",
     description: "Product-led monetization at scale",
-    pricing: [{ type: "flat", amount: 49900, currency: "USD", interval: "monthly" }],
+    pricing: [{ type: "flat", amount: 499, currency: "USD", interval: "monthly" }],
     entitlements: [
       { featureKey: "max_customers", featureDisplayName: "Tracked customers", type: "limit", value: 10000 },
       { featureKey: "stripe", featureDisplayName: "Stripe integration", type: "boolean", value: true },
@@ -35,7 +35,7 @@ export const SAMPLE_PLANS: Plan[] = [
     name: "Scale",
     description: "Volume-based capacity pricing",
     pricing: [
-      { type: "flat", amount: 99900, currency: "USD", interval: "monthly" },
+      { type: "flat", amount: 999, currency: "USD", interval: "monthly" },
       {
         type: "usage",
         amount: 0,
@@ -75,7 +75,23 @@ export const SAMPLE_USAGE: Record<string, UsageResult> = {
   storage_gb: { meterId: "storage_gb", current: 3, limit: 10 },
 };
 
-export const SAMPLE_CREDITS: CreditBalance = { balance: 120000, currency: "USD" };
+export const SAMPLE_CREDITS: CreditBalance = { balance: 1200, currency: "USD" };
+
+export const SAMPLE_TEAM: { members: TeamMember[]; seats: number; maxSeats: number } = {
+  members: [
+    { name: "Jordan Lee", email: "jordan@acme.test", role: "owner" },
+    { name: "Sam Rivera", email: "sam@acme.test", role: "admin" },
+    { name: "Taylor Kim", email: "taylor@acme.test", role: "member" },
+  ],
+  seats: 3,
+  maxSeats: 10,
+};
+
+export const SAMPLE_INVOICES: Invoice[] = [
+  { id: "in_1003", date: "2026-03-01T00:00:00Z", amount: 499, currency: "USD", status: "paid" },
+  { id: "in_1002", date: "2026-02-01T00:00:00Z", amount: 499, currency: "USD", status: "paid" },
+  { id: "in_1001", date: "2026-01-01T00:00:00Z", amount: 499, currency: "USD", status: "paid" },
+];
 
 export const SAMPLE_PORTAL = {
   planName: "Growth",

@@ -54,3 +54,20 @@ export interface CreditBalance {
   balance: number;
   currency?: string;
 }
+
+export interface TeamMember {
+  name: string;
+  email: string;
+  role: string;
+  avatarUrl?: string;
+}
+
+export interface Invoice {
+  id: string;
+  /** ISO date string. */
+  date: string;
+  /** Amount in major currency units (e.g. dollars). */
+  amount: number;
+  currency: string;
+  status: "paid" | "pending" | "overdue";
+}

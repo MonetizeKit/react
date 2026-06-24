@@ -38,4 +38,29 @@ describe("sample fallback (no plans / products defined)", () => {
     expect(screen.getByText("Growth")).toBeInTheDocument();
     expect(screen.getByText("Active")).toBeInTheDocument();
   });
+
+  it("CustomerPortal in sample mode renders Team + Invoices sections", () => {
+    withProvider(<CustomerPortal sample />);
+    expect(screen.getByText("Team")).toBeInTheDocument();
+    expect(screen.getByText("Jordan Lee")).toBeInTheDocument();
+    expect(screen.getByText("3/10 seats")).toBeInTheDocument();
+    expect(screen.getByText("Invoices")).toBeInTheDocument();
+    expect(screen.getAllByText("paid").length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("CustomerPortal renders provided team + invoices and can hide them", () => {
+    withProvider(
+      <CustomerPortal
+        planName="Pro"
+        showCredits={false}
+        showTeam
+        teamMembers={[{ name: "Ada", email: "ada@x.test", role: "owner" }]}
+        seats={{ used: 1, max: 5 }}
+        showInvoices={false}
+      />,
+    );
+    expect(screen.getByText("Ada")).toBeInTheDocument();
+    expect(screen.getByText("1/5 seats")).toBeInTheDocument();
+    expect(screen.queryByText("Invoices")).not.toBeInTheDocument();
+  });
 });
