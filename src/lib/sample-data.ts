@@ -95,7 +95,9 @@ export const SAMPLE_INVOICES: Invoice[] = [
 
 export const SAMPLE_PORTAL = {
   planName: "Growth",
-  meterIds: ["api_calls", "seats"],
+  price: { amount: 499, interval: "monthly" as const },
+  meterIds: ["api_calls", "seats", "storage_gb"],
+  nextInvoice: { date: "2026-07-01T00:00:00Z", amount: 499, currency: "USD" },
 } as const;
 
 /** Default disclaimer copy shown alongside sample data. */

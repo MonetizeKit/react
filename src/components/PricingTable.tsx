@@ -58,7 +58,8 @@ export function PricingTable({
   sampleWhenEmpty = true,
   disclaimer,
 }: PricingTableProps) {
-  const { client, tokens } = useMonetizeKit();
+  const { client, tokens, locale: ctxLocale } = useMonetizeKit();
+  const effectiveLocale = locale ?? ctxLocale;
   const [plans, setPlans] = useState<Plan[] | null>(plansProp ?? null);
   const [error, setError] = useState<Error | null>(null);
   const [cycle, setCycle] = useState<"monthly" | "annually">(billingCycle ?? "monthly");
@@ -119,7 +120,7 @@ export function PricingTable({
       ) : null}
       <div style={wrapperStyle}>
       {effectivePlans.map((plan) => {
-        const price = describePlanPrice(plan, locale, cycle);
+        const price = describePlanPrice(plan, effectiveLocale, cycle);
         const highlighted =
           highlightPlan != null &&
           plan.name.toLowerCase() === highlightPlan.toLowerCase();
