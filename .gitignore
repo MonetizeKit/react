@@ -7,3 +7,7 @@ storybook-static
 .env.*
 coverage
 .turbo
+
+# Playwright
+test-results/
+playwright-report/
