@@ -90,9 +90,12 @@ jobs:
 
       - uses: pnpm/action-setup@v4
 
+      # Node 24: the Storybook test-runner (Jest) loads the TS test-runner config
+      # via require(ESM), which needs the synchronous vm module APIs added in
+      # Node 24.9+. On Node 22 every story suite "fails to run".
       - uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "24"
 
       - name: Enable corepack
         run: corepack enable
