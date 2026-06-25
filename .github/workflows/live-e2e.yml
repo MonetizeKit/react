@@ -1,0 +1,50 @@
+name: Live External-Consumer E2E
+
+# Renders the published PricingTable against the REAL catalog API through the
+# deployed Storybook, as an external customer would. Runs nightly and on demand;
+# the spec self-skips (green) unless the live targets + key are configured, so
+# this never blocks PRs and only validates when the secrets/vars are present.
+on:
+  schedule:
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+    inputs:
+      storybook_url:
+        description: "Deployed Storybook base URL (overrides E2E_STORYBOOK_URL var)"
+        required: false
+      app_url:
+        description: "App origin the components fetch from (overrides E2E_APP_URL var)"
+        required: false
+
+jobs:
+  live-e2e:
+    name: Live external-consumer E2E
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browser
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run live external-consumer E2E
+        env:
+          # Configure these as repo vars/secrets to actually run (else skips):
+          #   vars.E2E_STORYBOOK_URL, vars.E2E_APP_URL, secrets.MK_PUBLISHABLE_KEY
+          # MK_PUBLISHABLE_KEY must be a System Workspace pk_* key whose origin
+          # allowlist includes the Storybook origin.
+          E2E_STORYBOOK_URL: ${{ github.event.inputs.storybook_url || vars.E2E_STORYBOOK_URL }}
+          E2E_APP_URL: ${{ github.event.inputs.app_url || vars.E2E_APP_URL }}
+          MK_PUBLISHABLE_KEY: ${{ secrets.MK_PUBLISHABLE_KEY }}
+        run: pnpm test:e2e:live
