@@ -82,6 +82,48 @@ jobs:
       - name: Install smoke (pack + consume)
         run: node scripts/install-smoke.mjs
 
+  storybook-tests:
+    name: Storybook test-runner (interaction + a11y)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      # Node 24: the Storybook test-runner (Jest) loads the TS test-runner config
+      # via require(ESM), which needs the synchronous vm module APIs added in
+      # Node 24.9+. On Node 22 every story suite "fails to run".
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path)" >> "$GITHUB_ENV"
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browser
+        run: pnpm exec playwright install --with-deps chromium
+
+      # Builds + serves the static Storybook, then runs the test-runner against
+      # it: smoke-renders + runs each story's play interactions, plus axe a11y
+      # (structural rules; color-contrast deferred — see .storybook/test-runner.ts).
+      - name: Storybook test-runner (interaction + axe a11y)
+        run: pnpm test-storybook:ci
+
   required-checks:
     name: Required Checks Gate
     runs-on: ubuntu-latest
@@ -89,12 +131,13 @@ jobs:
     needs:
       - build-and-test
       - install-smoke
+      - storybook-tests
     steps:
       - name: Validate required checks passed
         shell: bash
         run: |
           failed=0
-          for result in "build-and-test:${{ needs.build-and-test.result }}" "install-smoke:${{ needs.install-smoke.result }}"; do
+          for result in "build-and-test:${{ needs.build-and-test.result }}" "install-smoke:${{ needs.install-smoke.result }}" "storybook-tests:${{ needs.storybook-tests.result }}"; do
             name="${result%%:*}"
             status="${result##*:}"
             if [ "${status}" != "success" ]; then

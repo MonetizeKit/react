@@ -95,6 +95,7 @@ export function AlertBanner({
           <div
             style={{ height: 6, borderRadius: 999, background: "var(--mk-border)", overflow: "hidden" }}
             role="progressbar"
+            aria-label={title}
             aria-valuenow={Math.round(Math.min(1, Math.max(0, progress)) * 100)}
             aria-valuemin={0}
             aria-valuemax={100}
