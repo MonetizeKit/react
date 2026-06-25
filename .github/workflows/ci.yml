@@ -113,7 +113,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
+        run: pnpm exec playwright install --with-deps chromium
 
       # Builds + serves the static Storybook, then runs the test-runner against
       # it: smoke-renders + runs each story's play interactions, plus axe a11y
