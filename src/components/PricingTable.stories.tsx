@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { PricingTable } from "./PricingTable";
+import { MonetizeKitProvider } from "../provider";
 import type { Plan } from "../types";
 
 // Theme / locale / currency are controlled from the toolbar (see .storybook
@@ -76,3 +77,28 @@ export const WithBillingToggle: Story = { args: { showBillingToggle: true } };
 
 /** Empty catalog → illustrative sample plans behind a clear disclaimer. */
 export const SampleWhenEmpty: Story = { args: { plans: [], highlightPlan: "Growth" } };
+
+/**
+ * Live external-consumer story. Renders the PricingTable against a real catalog
+ * API via a browser-safe publishable key — driven by URL args in the live E2E
+ * job (`?args=publishableKey:...;baseUrl:...`). With empty args (the default in
+ * the gallery) it shows a hint, so it's only meaningfully exercised by the live
+ * E2E. No secret is baked into the Storybook build.
+ */
+export const Live: StoryObj<{ publishableKey?: string; baseUrl?: string }> = {
+  args: { publishableKey: "", baseUrl: "" },
+  render: (args) =>
+    args.publishableKey && args.baseUrl ? (
+      <MonetizeKitProvider
+        publishableKey={args.publishableKey}
+        baseUrl={args.baseUrl}
+        appearance="memphis"
+      >
+        <PricingTable highlightPlan="Pro" />
+      </MonetizeKitProvider>
+    ) : (
+      <p data-testid="live-needs-args">
+        Provide publishableKey + baseUrl args to render live.
+      </p>
+    ),
+};
