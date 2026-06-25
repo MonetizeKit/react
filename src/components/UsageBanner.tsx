@@ -64,6 +64,7 @@ export function UsageBanner({
             overflow: "hidden",
           }}
           role="progressbar"
+          aria-label={`${label} usage`}
           aria-valuenow={Math.round(fraction * 100)}
           aria-valuemin={0}
           aria-valuemax={100}
