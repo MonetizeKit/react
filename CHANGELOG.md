@@ -1,5 +1,14 @@
 # @monetizekit/react
 
+## 0.6.1
+
+### Patch Changes
+
+- d44bca7: a11y: add accessible names to the `AlertBanner` and `UsageBanner` progress bars
+  (`aria-label`), resolving the `aria-progressbar-name` axe violation. Adds a
+  Storybook test-runner CI step (interaction + axe accessibility) to guard
+  structural accessibility going forward.
+
 ## 0.6.0
 
 ### Minor Changes
