@@ -86,6 +86,28 @@ export function annualSavingsPercent(plan: Plan): number | null {
   return pct > 0 ? pct : null;
 }
 
+/**
+ * Sort key for displaying plans cheapest-first: the effective monthly flat
+ * price, with contact-sales / unpriced plans sorted last. Used to give live
+ * catalog data a conventional low→high ordering regardless of API order.
+ */
+export function planSortValue(plan: Plan): number {
+  const pricing = plan.pricing ?? [];
+  const contactSales = (plan.tags ?? []).includes("contact_sales") || pricing.length === 0;
+  if (contactSales) return Number.POSITIVE_INFINITY;
+  const flats = pricing.filter((t) => t.type === "flat");
+  const monthly = flats.find((t) => t.interval === "monthly") ?? flats[0];
+  return monthly?.amount ?? 0;
+}
+
+/** Return a copy of `plans` ordered cheapest-first (contact-sales last), stable. */
+export function sortPlansForDisplay(plans: Plan[]): Plan[] {
+  return plans
+    .map((plan, index) => ({ plan, index }))
+    .sort((a, b) => planSortValue(a.plan) - planSortValue(b.plan) || a.index - b.index)
+    .map(({ plan }) => plan);
+}
+
 /** Human-readable description of a usage term's metered tiers. */
 export function describeUsageTerm(term: PricingTerm, locale?: string): string {
   const parts: string[] = [];

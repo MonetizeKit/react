@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { describePlanPrice, describeUsageTerm, formatMoney } from "./format";
+import { describePlanPrice, describeUsageTerm, formatMoney, sortPlansForDisplay } from "./format";
 import type { Plan, PricingTerm } from "../types";
 
 describe("formatMoney", () => {
@@ -39,6 +39,32 @@ describe("describePlanPrice", () => {
         .contactSales,
     ).toBe(true);
     expect(describePlanPrice({ id: "x", name: "X" }).contactSales).toBe(true);
+  });
+});
+
+describe("sortPlansForDisplay", () => {
+  it("orders plans cheapest-first with contact-sales last (stable)", () => {
+    const plans: Plan[] = [
+      { id: "ent", name: "Enterprise", tags: ["contact_sales"], pricing: [] },
+      { id: "scale", name: "Scale", pricing: [{ type: "flat", amount: 999, currency: "USD", interval: "monthly" }] },
+      { id: "pro", name: "Pro", pricing: [{ type: "flat", amount: 499, currency: "USD", interval: "monthly" }] },
+      { id: "free", name: "Free", pricing: [{ type: "flat", amount: 0, currency: "USD", interval: "monthly" }] },
+    ];
+    expect(sortPlansForDisplay(plans).map((p) => p.name)).toEqual([
+      "Free",
+      "Pro",
+      "Scale",
+      "Enterprise",
+    ]);
+  });
+
+  it("does not mutate the input array", () => {
+    const plans: Plan[] = [
+      { id: "b", name: "B", pricing: [{ type: "flat", amount: 50, currency: "USD", interval: "monthly" }] },
+      { id: "a", name: "A", pricing: [{ type: "flat", amount: 10, currency: "USD", interval: "monthly" }] },
+    ];
+    sortPlansForDisplay(plans);
+    expect(plans.map((p) => p.name)).toEqual(["B", "A"]);
   });
 });
 

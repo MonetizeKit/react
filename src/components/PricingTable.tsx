@@ -1,7 +1,7 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { useMonetizeKit } from "../provider";
 import { tokensToStyle } from "../theme/tokens";
-import { describePlanPrice, annualSavingsPercent, formatUnits } from "../lib/format";
+import { describePlanPrice, annualSavingsPercent, formatUnits, sortPlansForDisplay } from "../lib/format";
 import { SAMPLE_PLANS } from "../lib/sample-data";
 import { SampleNotice } from "./SampleNotice";
 import { ConfigNotice } from "./ConfigNotice";
@@ -199,7 +199,12 @@ export function PricingTable({
   }
 
   const isSample = plans.length === 0 && sampleWhenEmpty;
-  const effectivePlans = isSample ? SAMPLE_PLANS : plans;
+  // Order live catalog data cheapest-first; respect a caller's explicit order.
+  const effectivePlans = isSample
+    ? SAMPLE_PLANS
+    : plansProp
+      ? plans
+      : sortPlansForDisplay(plans);
 
   if (effectivePlans.length === 0) {
     return <div style={{ color: "var(--mk-muted)" }}>No plans available.</div>;

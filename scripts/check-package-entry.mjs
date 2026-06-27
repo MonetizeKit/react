@@ -26,6 +26,8 @@ const expectedFunctions = [
   "resolveTokens",
   "tokensToStyle",
   "describePlanPrice",
+  "planSortValue",
+  "sortPlansForDisplay",
   "MonetizeKitClient",
 ];
 
