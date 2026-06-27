@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useMonetizeKit } from "../provider";
 import { tokensToStyle } from "../theme/tokens";
-import { describePlanPrice, formatUnits } from "../lib/format";
+import { describePlanPrice, formatUnits, sortPlansForDisplay } from "../lib/format";
 import { SAMPLE_PLANS } from "../lib/sample-data";
 import { SampleNotice } from "./SampleNotice";
 import { CheckCircleIcon, MinusCircleIcon } from "./icons";
@@ -136,7 +136,12 @@ export function PricingComparison({
   }
 
   const isSample = plans.length === 0 && sampleWhenEmpty;
-  const effectivePlans = isSample ? SAMPLE_PLANS : plans;
+  // Order live catalog data cheapest-first; respect a caller's explicit order.
+  const effectivePlans = isSample
+    ? SAMPLE_PLANS
+    : plansProp
+      ? plans
+      : sortPlansForDisplay(plans);
   if (effectivePlans.length === 0) {
     return <div style={{ color: "var(--mk-muted)" }}>No plans to compare.</div>;
   }

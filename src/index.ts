@@ -83,6 +83,8 @@ export {
   formatUnits,
   describePlanPrice,
   describeUsageTerm,
+  planSortValue,
+  sortPlansForDisplay,
   type PriceDisplay,
 } from "./lib/format";
 
