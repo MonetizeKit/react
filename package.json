@@ -1,6 +1,6 @@
 {
   "name": "@monetizekit/react",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "Drop-in, themeable React components and hooks for pricing, paywalls, usage, and self-service billing — PricingTable, PricingComparison, Paywall, UsageBanner, AlertBanner, CustomerPortal, EntitlementGate.",
   "license": "MIT",
   "repository": {
