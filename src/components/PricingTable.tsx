@@ -1,11 +1,12 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { useMonetizeKit } from "../provider";
 import { tokensToStyle } from "../theme/tokens";
-import { describePlanPrice, annualSavingsPercent } from "../lib/format";
+import { describePlanPrice, annualSavingsPercent, formatUnits } from "../lib/format";
 import { SAMPLE_PLANS } from "../lib/sample-data";
 import { SampleNotice } from "./SampleNotice";
 import { ConfigNotice } from "./ConfigNotice";
 import { BillingCycleToggle } from "./BillingCycleToggle";
+import { CheckCircleIcon } from "./icons";
 import type { Plan } from "../types";
 
 export interface PricingTableProps {
@@ -21,6 +22,10 @@ export interface PricingTableProps {
   onSelectPlan?: (planId: string) => void;
   /** Where the Contact Sales CTA links (defaults to no-op). */
   onContactSales?: (planId: string) => void;
+  /** CTA label for purchasable plans. Defaults to "Get started". */
+  ctaLabel?: string;
+  /** Max number of feature rows to show per card. Defaults to 8. */
+  maxFeatures?: number;
   /**
    * When there are no plans to show, render illustrative sample plans behind a
    * clear disclaimer instead of an empty table. Defaults to `true`.
@@ -30,23 +35,84 @@ export interface PricingTableProps {
   disclaimer?: ReactNode;
 }
 
-const wrapperStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-  gap: "1.5rem",
-  background: "var(--mk-bg)",
-  color: "var(--mk-fg)",
-  fontFamily: "var(--mk-font)",
-};
+const UNLIMITED_THRESHOLD = 9999;
 
-const cardBase: CSSProperties = {
-  border: "1px solid var(--mk-border)",
-  borderRadius: "var(--mk-radius)",
-  padding: "1.5rem",
+/**
+ * Scoped, token-driven stylesheet for the pricing grid. Inline styles can't
+ * express media queries, hover, or the highlighted-card lift, so we render a
+ * small `<style>` element (SSR-safe) scoped to `.mk-pricing-table`.
+ *
+ * Desktop column count is driven by `--mk-pt-cols` (set inline to the plan
+ * count, capped) so 4 plans render as a 4-up row — never an orphaned 4th card —
+ * collapsing to 2-up on tablet and a single column on mobile.
+ */
+const STYLE_ID = "mk-pricing-table-styles";
+const PRICING_TABLE_CSS = `
+.mk-pricing-table{font-family:var(--mk-font);color:var(--mk-fg)}
+.mk-pt-grid{display:grid;gap:1.5rem;grid-template-columns:1fr;align-items:stretch;padding-top:.75rem}
+@media(min-width:640px){.mk-pt-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:1024px){.mk-pt-grid{grid-template-columns:repeat(var(--mk-pt-cols,3),minmax(0,1fr))}}
+.mk-pt-card{position:relative;display:flex;flex-direction:column;gap:1rem;background:var(--mk-card);color:var(--mk-card-fg);border:1px solid var(--mk-border);border-radius:var(--mk-radius);padding:1.75rem;box-shadow:var(--mk-shadow);transition:transform .15s ease,box-shadow .15s ease}
+.mk-pt-card:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(0,0,0,.12)}
+.mk-pt-card[data-mk-highlighted="true"]{border-color:var(--mk-primary);border-width:2px;box-shadow:0 16px 40px color-mix(in srgb,var(--mk-primary) 22%,transparent)}
+@media(min-width:1024px){.mk-pt-card[data-mk-highlighted="true"]{transform:translateY(-8px)}.mk-pt-card[data-mk-highlighted="true"]:hover{transform:translateY(-10px)}}
+.mk-pt-badge{position:absolute;top:0;left:50%;transform:translate(-50%,-50%);background:var(--mk-primary);color:var(--mk-primary-fg);border-radius:999px;padding:.25rem .85rem;font-size:.75rem;font-weight:600;letter-spacing:.02em;white-space:nowrap;box-shadow:var(--mk-shadow)}
+.mk-pt-name{margin:0;font-size:1.25rem;font-weight:700;line-height:1.2}
+.mk-pt-desc{margin:0;color:var(--mk-muted);font-size:.875rem;line-height:1.45;min-height:2.5em}
+.mk-pt-price{display:flex;align-items:baseline;gap:.4rem;flex-wrap:wrap}
+.mk-pt-amount{font-size:2.25rem;font-weight:800;letter-spacing:-.02em;line-height:1}
+.mk-pt-caption{color:var(--mk-muted);font-size:.875rem}
+.mk-pt-cta{margin-top:auto;width:100%;border-radius:var(--mk-radius);padding:.75rem 1rem;font-weight:600;font-size:.9375rem;cursor:pointer;transition:filter .15s ease,opacity .15s ease;border:1px solid transparent}
+.mk-pt-cta:hover{filter:brightness(.94)}
+.mk-pt-cta--primary{background:var(--mk-primary);color:var(--mk-primary-fg)}
+.mk-pt-cta--ghost{background:color-mix(in srgb,var(--mk-fg) 8%,transparent);color:var(--mk-fg)}
+.mk-pt-cta--ghost:hover{background:color-mix(in srgb,var(--mk-fg) 14%,transparent);filter:none}
+.mk-pt-flabel{font-size:.8125rem;font-weight:600;color:var(--mk-fg);margin:.25rem 0 -.25rem}
+.mk-pt-features{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.6rem}
+.mk-pt-feature{display:flex;align-items:flex-start;gap:.55rem;font-size:.875rem;line-height:1.4;color:var(--mk-card-fg)}
+.mk-pt-check{flex:0 0 auto;width:1.15rem;height:1.15rem;margin-top:.05rem;color:var(--mk-success)}
+.mk-pt-card[data-mk-highlighted="true"] .mk-pt-check{color:var(--mk-primary)}
+`;
+
+function PricingTableStyles() {
+  return <style id={STYLE_ID} dangerouslySetInnerHTML={{ __html: PRICING_TABLE_CSS }} />;
+}
+
+/** Plain inline styles (theme tokens) for the outer wrapper, SSR-safe. */
+const wrapperStyle: CSSProperties = {
   display: "flex",
   flexDirection: "column",
-  gap: "0.75rem",
+  gap: "1.25rem",
 };
+
+interface FeatureRow {
+  key: string;
+  label: string;
+}
+
+/**
+ * Derive a clean "what's included" list from a plan's entitlements: include
+ * boolean entitlements only when granted, render limits/values inline, and skip
+ * features the plan does not have so cards never advertise absent capabilities.
+ */
+function includedFeatures(plan: Plan, locale: string | undefined, max: number): FeatureRow[] {
+  const rows: FeatureRow[] = [];
+  for (const ent of plan.entitlements ?? []) {
+    if (ent.type === "boolean") {
+      if (ent.value === true) rows.push({ key: ent.featureKey, label: ent.featureDisplayName });
+    } else if (ent.type === "limit") {
+      const n = Number(ent.value);
+      rows.push({
+        key: ent.featureKey,
+        label: `${ent.featureDisplayName}: ${n >= UNLIMITED_THRESHOLD ? "Unlimited" : formatUnits(n, locale)}`,
+      });
+    } else {
+      rows.push({ key: ent.featureKey, label: `${ent.featureDisplayName}: ${String(ent.value)}` });
+    }
+    if (rows.length >= max) break;
+  }
+  return rows;
+}
 
 export function PricingTable({
   plans: plansProp,
@@ -56,6 +122,8 @@ export function PricingTable({
   locale,
   onSelectPlan,
   onContactSales,
+  ctaLabel = "Get started",
+  maxFeatures = 8,
   sampleWhenEmpty = true,
   disclaimer,
 }: PricingTableProps) {
@@ -97,24 +165,26 @@ export function PricingTable({
   if (configError) {
     return (
       <div
-        style={{ ...tokensToStyle(tokens), display: "flex", flexDirection: "column", gap: "1rem" }}
+        className="mk-pricing-table"
+        style={{ ...tokensToStyle(tokens), ...wrapperStyle }}
         data-mk-component="pricing-table"
         data-mk-config-error="true"
       >
+        <PricingTableStyles />
         <ConfigNotice diagnostic={config} />
         {sampleWhenEmpty ? (
           <>
             <SampleNotice>{disclaimer}</SampleNotice>
-            <div style={wrapperStyle}>
-              {SAMPLE_PLANS.map((plan) => (
-                <div key={plan.id} style={cardBase} data-mk-plan={plan.name}>
-                  <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700 }}>{plan.name}</h3>
-                  <div style={{ fontSize: "2rem", fontWeight: 700 }}>
-                    {describePlanPrice(plan, effectiveLocale, cycle).headline}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <PricingGrid
+              plans={SAMPLE_PLANS}
+              cycle={cycle}
+              locale={effectiveLocale}
+              highlightPlan={highlightPlan}
+              maxFeatures={maxFeatures}
+              ctaLabel={ctaLabel}
+              onSelectPlan={onSelectPlan}
+              onContactSales={onContactSales}
+            />
           </>
         ) : null}
       </div>
@@ -137,104 +207,102 @@ export function PricingTable({
 
   return (
     <div
-      style={{ ...tokensToStyle(tokens), display: "flex", flexDirection: "column", gap: "1rem" }}
+      className="mk-pricing-table"
+      style={{ ...tokensToStyle(tokens), ...wrapperStyle }}
       data-mk-component="pricing-table"
       data-mk-sample={isSample ? "true" : undefined}
     >
+      <PricingTableStyles />
       {config.severity === "warning" ? <ConfigNotice diagnostic={config} /> : null}
       {isSample ? <SampleNotice>{disclaimer}</SampleNotice> : null}
       {showBillingToggle ? (
         <BillingCycleToggle
           value={cycle}
           onChange={setCycle}
-          savingsPercent={Math.max(
-            0,
-            ...effectivePlans.map((p) => annualSavingsPercent(p) ?? 0),
-          )}
+          savingsPercent={Math.max(0, ...effectivePlans.map((p) => annualSavingsPercent(p) ?? 0))}
         />
       ) : null}
-      <div style={wrapperStyle}>
-      {effectivePlans.map((plan) => {
-        const price = describePlanPrice(plan, effectiveLocale, cycle);
+      <PricingGrid
+        plans={effectivePlans}
+        cycle={cycle}
+        locale={effectiveLocale}
+        highlightPlan={highlightPlan}
+        maxFeatures={maxFeatures}
+        ctaLabel={ctaLabel}
+        onSelectPlan={onSelectPlan}
+        onContactSales={onContactSales}
+      />
+    </div>
+  );
+}
+
+function PricingGrid({
+  plans,
+  cycle,
+  locale,
+  highlightPlan,
+  maxFeatures,
+  ctaLabel,
+  onSelectPlan,
+  onContactSales,
+}: {
+  plans: Plan[];
+  cycle: "monthly" | "annually";
+  locale?: string;
+  highlightPlan?: string;
+  maxFeatures: number;
+  ctaLabel: string;
+  onSelectPlan?: (planId: string) => void;
+  onContactSales?: (planId: string) => void;
+}) {
+  // Cap desktop columns so many plans still wrap into balanced rows.
+  const cols = Math.min(plans.length, 4);
+  return (
+    <div className="mk-pt-grid" style={{ ["--mk-pt-cols" as string]: String(cols) } as CSSProperties}>
+      {plans.map((plan) => {
+        const price = describePlanPrice(plan, locale, cycle);
         const highlighted =
-          highlightPlan != null &&
-          plan.name.toLowerCase() === highlightPlan.toLowerCase();
+          highlightPlan != null && plan.name.toLowerCase() === highlightPlan.toLowerCase();
+        const features = includedFeatures(plan, locale, maxFeatures);
         return (
           <div
             key={plan.id}
-            style={{
-              ...cardBase,
-              borderColor: highlighted ? "var(--mk-primary)" : "var(--mk-border)",
-              borderWidth: highlighted ? 2 : 1,
-            }}
+            className="mk-pt-card"
             data-mk-plan={plan.name}
             data-mk-highlighted={highlighted ? "true" : undefined}
           >
-            {highlighted ? (
-              <span
-                style={{
-                  alignSelf: "flex-start",
-                  background: "var(--mk-primary)",
-                  color: "var(--mk-primary-fg)",
-                  borderRadius: "var(--mk-radius)",
-                  padding: "0.125rem 0.5rem",
-                  fontSize: "0.75rem",
-                  fontWeight: 600,
-                }}
-              >
-                Most Popular
-              </span>
-            ) : null}
-            <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700 }}>{plan.name}</h3>
-            {plan.description ? (
-              <p style={{ margin: 0, color: "var(--mk-muted)", fontSize: "0.875rem" }}>
-                {plan.description}
-              </p>
-            ) : null}
-            <div style={{ display: "flex", alignItems: "baseline", gap: "0.375rem" }}>
-              <span style={{ fontSize: "2rem", fontWeight: 700 }}>
-                {price.contactSales ? "Custom" : price.headline}
-              </span>
-              {price.caption ? (
-                <span style={{ color: "var(--mk-muted)", fontSize: "0.875rem" }}>
-                  {price.caption}
-                </span>
-              ) : null}
+            {highlighted ? <span className="mk-pt-badge">Most Popular</span> : null}
+            <h3 className="mk-pt-name">{plan.name}</h3>
+            {plan.description ? <p className="mk-pt-desc">{plan.description}</p> : null}
+            <div className="mk-pt-price">
+              <span className="mk-pt-amount">{price.contactSales ? "Custom" : price.headline}</span>
+              {price.caption ? <span className="mk-pt-caption">{price.caption}</span> : null}
             </div>
-            {plan.entitlements && plan.entitlements.length > 0 ? (
-              <ul style={{ margin: 0, paddingLeft: "1rem", color: "var(--mk-fg)", fontSize: "0.875rem" }}>
-                {plan.entitlements.slice(0, 6).map((e) => (
-                  <li key={e.featureKey}>
-                    {e.featureDisplayName}
-                    {e.type !== "boolean" ? `: ${String(e.value)}` : ""}
-                  </li>
-                ))}
-              </ul>
-            ) : null}
             <button
               type="button"
+              className={`mk-pt-cta ${highlighted ? "mk-pt-cta--primary" : "mk-pt-cta--ghost"}`}
               onClick={() =>
-                price.contactSales
-                  ? onContactSales?.(plan.id)
-                  : onSelectPlan?.(plan.id)
+                price.contactSales ? onContactSales?.(plan.id) : onSelectPlan?.(plan.id)
               }
-              style={{
-                marginTop: "auto",
-                background: "var(--mk-primary)",
-                color: "var(--mk-primary-fg)",
-                border: "none",
-                borderRadius: "var(--mk-radius)",
-                padding: "0.625rem 1rem",
-                fontWeight: 600,
-                cursor: "pointer",
-              }}
             >
-              {price.contactSales ? "Contact Sales" : "Get started"}
+              {price.contactSales ? "Contact Sales" : ctaLabel}
             </button>
+            {features.length > 0 ? (
+              <>
+                <div className="mk-pt-flabel">What's included:</div>
+                <ul className="mk-pt-features">
+                  {features.map((f) => (
+                    <li key={f.key} className="mk-pt-feature">
+                      <CheckCircleIcon className="mk-pt-check" />
+                      <span>{f.label}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : null}
           </div>
         );
       })}
-      </div>
     </div>
   );
 }

@@ -1,9 +1,10 @@
-import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useMonetizeKit } from "../provider";
 import { tokensToStyle } from "../theme/tokens";
 import { describePlanPrice, formatUnits } from "../lib/format";
 import { SAMPLE_PLANS } from "../lib/sample-data";
 import { SampleNotice } from "./SampleNotice";
+import { CheckCircleIcon, MinusCircleIcon } from "./icons";
 import type { Plan, PlanEntitlement } from "../types";
 
 /** A labelled group of feature keys to compare across plans. */
@@ -29,13 +30,41 @@ export interface PricingComparisonProps {
 
 const UNLIMITED_THRESHOLD = 9999;
 
+const STYLE_ID = "mk-pricing-comparison-styles";
+const PRICING_COMPARISON_CSS = `
+.mk-pricing-comparison{font-family:var(--mk-font);color:var(--mk-fg)}
+.mk-pc-scroll{overflow-x:auto;border:1px solid var(--mk-border);border-radius:var(--mk-radius);background:var(--mk-card);box-shadow:var(--mk-shadow)}
+.mk-pc-table{width:100%;border-collapse:collapse;color:var(--mk-card-fg);min-width:560px}
+.mk-pc-th{padding:1.1rem 1rem .9rem;text-align:center;vertical-align:bottom}
+.mk-pc-th--feature{text-align:left;font-size:.8125rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--mk-muted)}
+.mk-pc-th-name{font-weight:700;font-size:1.0625rem;line-height:1.2}
+.mk-pc-th-price{font-size:.8125rem;color:var(--mk-muted);font-weight:500;margin-top:.2rem}
+.mk-pc-badge{display:inline-block;margin-top:.4rem;background:var(--mk-primary);color:var(--mk-primary-fg);border-radius:999px;padding:.12rem .55rem;font-size:.625rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.mk-pc-group td{padding:.65rem 1rem;font-size:.75rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--mk-muted);background:color-mix(in srgb,var(--mk-fg) 4%,transparent)}
+.mk-pc-row{border-top:1px solid var(--mk-border)}
+.mk-pc-row:hover td{background:color-mix(in srgb,var(--mk-fg) 3%,transparent)}
+.mk-pc-cell{padding:.8rem 1rem;text-align:center;font-size:.875rem;vertical-align:middle;color:var(--mk-card-fg)}
+.mk-pc-cell--feature{text-align:left;font-weight:500}
+.mk-pc-col-hl{background:color-mix(in srgb,var(--mk-primary) 7%,transparent)}
+.mk-pc-row:hover td.mk-pc-col-hl{background:color-mix(in srgb,var(--mk-primary) 12%,transparent)}
+.mk-pc-check{width:1.2rem;height:1.2rem;color:var(--mk-success);display:inline-block;vertical-align:middle}
+.mk-pc-col-hl .mk-pc-check{color:var(--mk-primary)}
+.mk-pc-no{width:1.2rem;height:1.2rem;color:var(--mk-muted);opacity:.45;display:inline-block;vertical-align:middle}
+`;
+
+function PricingComparisonStyles() {
+  return <style id={STYLE_ID} dangerouslySetInnerHTML={{ __html: PRICING_COMPARISON_CSS }} />;
+}
+
 function entitlementCell(ent: PlanEntitlement | undefined, locale?: string): ReactNode {
-  if (!ent) return <span style={{ color: "var(--mk-muted)" }}>—</span>;
+  if (!ent) return <MinusCircleIcon className="mk-pc-no" title="Not included" />;
   switch (ent.type) {
     case "boolean":
-      return ent.value
-        ? <span aria-label="Included" style={{ color: "var(--mk-success)", fontWeight: 700 }}>✓</span>
-        : <span aria-label="Not included" style={{ color: "var(--mk-muted)" }}>—</span>;
+      return ent.value ? (
+        <CheckCircleIcon className="mk-pc-check" title="Included" />
+      ) : (
+        <MinusCircleIcon className="mk-pc-no" title="Not included" />
+      );
     case "limit": {
       const n = Number(ent.value);
       return <span>{n >= UNLIMITED_THRESHOLD ? "Unlimited" : formatUnits(n, locale)}</span>;
@@ -60,13 +89,6 @@ function deriveGroups(plans: Plan[]): ComparisonFeatureGroup[] {
     },
   ];
 }
-
-const cellStyle: CSSProperties = {
-  padding: "0.75rem 1rem",
-  textAlign: "center",
-  fontSize: "0.875rem",
-  borderTop: "1px solid var(--mk-border)",
-};
 
 /**
  * A feature-comparison table across plans (à la a "Compare plans" section).
@@ -123,46 +145,39 @@ export function PricingComparison({
   const entByPlan = effectivePlans.map(
     (plan) => new Map((plan.entitlements ?? []).map((e) => [e.featureKey, e])),
   );
+  const highlightedIndex = effectivePlans.findIndex(
+    (p) => highlightPlan != null && p.name.toLowerCase() === highlightPlan.toLowerCase(),
+  );
 
   return (
     <div
+      className="mk-pricing-comparison"
       style={{ ...tokensToStyle(tokens), display: "flex", flexDirection: "column", gap: "1rem" }}
       data-mk-component="pricing-comparison"
       data-mk-sample={isSample ? "true" : undefined}
     >
+      <PricingComparisonStyles />
       {isSample ? <SampleNotice>{disclaimer}</SampleNotice> : null}
-      <div style={{ overflowX: "auto" }}>
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            background: "var(--mk-bg)",
-            color: "var(--mk-fg)",
-            fontFamily: "var(--mk-font)",
-          }}
-        >
+      <div className="mk-pc-scroll">
+        <table className="mk-pc-table">
           <thead>
             <tr>
-              <th style={{ ...cellStyle, textAlign: "left", borderTop: "none" }}>Features</th>
-              {effectivePlans.map((plan) => {
-                const highlighted =
-                  highlightPlan != null && plan.name.toLowerCase() === highlightPlan.toLowerCase();
+              <th className="mk-pc-th mk-pc-th--feature">Features</th>
+              {effectivePlans.map((plan, i) => {
+                const highlighted = i === highlightedIndex;
                 const price = describePlanPrice(plan, locale, billingCycle);
                 return (
                   <th
                     key={plan.id}
-                    style={{
-                      ...cellStyle,
-                      borderTop: "none",
-                      color: highlighted ? "var(--mk-primary)" : "var(--mk-fg)",
-                    }}
+                    className={`mk-pc-th${highlighted ? " mk-pc-col-hl" : ""}`}
                     data-mk-plan={plan.name}
                     data-mk-highlighted={highlighted ? "true" : undefined}
                   >
-                    <div style={{ fontWeight: 700 }}>{plan.name}</div>
-                    <div style={{ fontSize: "0.75rem", color: "var(--mk-muted)", fontWeight: 400 }}>
+                    <div className="mk-pc-th-name">{plan.name}</div>
+                    <div className="mk-pc-th-price">
                       {price.contactSales ? "Custom" : price.headline}
                     </div>
+                    {highlighted ? <span className="mk-pc-badge">Popular</span> : null}
                   </th>
                 );
               })}
@@ -175,6 +190,7 @@ export function PricingComparison({
                 group={group}
                 planCount={effectivePlans.length}
                 entByPlan={entByPlan}
+                highlightedIndex={highlightedIndex}
                 locale={locale}
               />
             ))}
@@ -189,34 +205,28 @@ function FeatureGroupRows({
   group,
   planCount,
   entByPlan,
+  highlightedIndex,
   locale,
 }: {
   group: ComparisonFeatureGroup;
   planCount: number;
   entByPlan: Map<string, PlanEntitlement>[];
+  highlightedIndex: number;
   locale?: string;
 }) {
   return (
     <>
-      <tr>
-        <td
-          colSpan={planCount + 1}
-          style={{
-            padding: "0.625rem 1rem",
-            fontSize: "0.8125rem",
-            fontWeight: 700,
-            background: "color-mix(in srgb, var(--mk-fg) 5%, transparent)",
-            borderTop: "1px solid var(--mk-border)",
-          }}
-        >
-          {group.title}
-        </td>
+      <tr className="mk-pc-group">
+        <td colSpan={planCount + 1}>{group.title}</td>
       </tr>
       {group.features.map((feature) => (
-        <tr key={feature.key}>
-          <td style={{ ...cellStyle, textAlign: "left", color: "var(--mk-fg)" }}>{feature.label}</td>
+        <tr key={feature.key} className="mk-pc-row">
+          <td className="mk-pc-cell mk-pc-cell--feature">{feature.label}</td>
           {entByPlan.map((map, i) => (
-            <td key={i} style={cellStyle}>
+            <td
+              key={i}
+              className={`mk-pc-cell${i === highlightedIndex ? " mk-pc-col-hl" : ""}`}
+            >
               {entitlementCell(map.get(feature.key), locale)}
             </td>
           ))}
