@@ -8,6 +8,11 @@ import {
 } from "react";
 import { MonetizeKitClient } from "./lib/client";
 import {
+  inspectMonetizeKitConfig,
+  formatConfigDiagnosticForConsole,
+  type ConfigDiagnostic,
+} from "./lib/config-diagnostics";
+import {
   resolveTokens,
   appearanceMode,
   type Appearance,
@@ -37,6 +42,8 @@ export interface MonetizeKitContextValue {
   locale?: string;
   /** Default ISO-4217 currency for money formatting. */
   currency: string;
+  /** Diagnostic for the provided publishable key / base URL (Clerk-style guardrail). */
+  config: ConfigDiagnostic;
 }
 
 const MonetizeKitContext = createContext<MonetizeKitContextValue | null>(null);
@@ -70,6 +77,21 @@ export function MonetizeKitProvider({
   children,
 }: MonetizeKitProviderProps) {
   const prefersDark = usePrefersDark(appearanceMode(appearance) === "system");
+  const config = useMemo(
+    () => inspectMonetizeKitConfig(publishableKey, baseUrl),
+    [publishableKey, baseUrl],
+  );
+
+  // Surface configuration problems in the console once per config (Clerk-style),
+  // so developers see the reminder even before any component renders.
+  useEffect(() => {
+    if (config.severity === "error") {
+      console.error(formatConfigDiagnosticForConsole(config));
+    } else if (config.severity === "warning") {
+      console.warn(formatConfigDiagnosticForConsole(config));
+    }
+  }, [config]);
+
   const value = useMemo<MonetizeKitContextValue>(() => {
     return {
       client: new MonetizeKitClient({ publishableKey, baseUrl, customerToken }),
@@ -78,8 +100,9 @@ export function MonetizeKitProvider({
       tokens: resolveTokens(appearance, prefersDark),
       locale,
       currency,
+      config,
     };
-  }, [publishableKey, baseUrl, customerToken, customerId, appearance, prefersDark, locale, currency]);
+  }, [publishableKey, baseUrl, customerToken, customerId, appearance, prefersDark, locale, currency, config]);
 
   return (
     <MonetizeKitContext.Provider value={value}>

@@ -35,6 +35,19 @@ export {
   type EntitlementGateProps,
 } from "./components/EntitlementGate";
 export { SampleNotice, type SampleNoticeProps } from "./components/SampleNotice";
+export { ConfigNotice, type ConfigNoticeProps } from "./components/ConfigNotice";
+
+// Configuration guardrails (Clerk-style): detect a missing / malformed / non-live
+// publishable key and surface it in logs + UI.
+export {
+  inspectMonetizeKitConfig,
+  formatConfigDiagnosticForConsole,
+  redactPublishableKey,
+  MONETIZEKIT_KEYS_DOCS_URL,
+  type ConfigDiagnostic,
+  type ConfigStatus,
+  type ConfigSeverity,
+} from "./lib/config-diagnostics";
 
 // Theming
 export {
