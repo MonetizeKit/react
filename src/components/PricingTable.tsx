@@ -4,6 +4,7 @@ import { tokensToStyle } from "../theme/tokens";
 import { describePlanPrice, annualSavingsPercent } from "../lib/format";
 import { SAMPLE_PLANS } from "../lib/sample-data";
 import { SampleNotice } from "./SampleNotice";
+import { ConfigNotice } from "./ConfigNotice";
 import { BillingCycleToggle } from "./BillingCycleToggle";
 import type { Plan } from "../types";
 
@@ -58,8 +59,11 @@ export function PricingTable({
   sampleWhenEmpty = true,
   disclaimer,
 }: PricingTableProps) {
-  const { client, tokens, locale: ctxLocale } = useMonetizeKit();
+  const { client, tokens, locale: ctxLocale, config } = useMonetizeKit();
   const effectiveLocale = locale ?? ctxLocale;
+  // A config error (e.g. missing publishable key) means a live fetch can't
+  // succeed — skip it and show an actionable notice instead of a doomed request.
+  const configError = !plansProp && config.severity === "error";
   const [plans, setPlans] = useState<Plan[] | null>(plansProp ?? null);
   const [error, setError] = useState<Error | null>(null);
   const [cycle, setCycle] = useState<"monthly" | "annually">(billingCycle ?? "monthly");
@@ -73,6 +77,7 @@ export function PricingTable({
       setPlans(plansProp);
       return;
     }
+    if (configError) return;
     let active = true;
     client
       .listPlans<{ data: Plan[] }>()
@@ -85,7 +90,36 @@ export function PricingTable({
     return () => {
       active = false;
     };
-  }, [client, plansProp]);
+  }, [client, plansProp, configError]);
+
+  // Missing/malformed key (or base URL): show the developer reminder, plus
+  // sample plans so the layout is still previewable.
+  if (configError) {
+    return (
+      <div
+        style={{ ...tokensToStyle(tokens), display: "flex", flexDirection: "column", gap: "1rem" }}
+        data-mk-component="pricing-table"
+        data-mk-config-error="true"
+      >
+        <ConfigNotice diagnostic={config} />
+        {sampleWhenEmpty ? (
+          <>
+            <SampleNotice>{disclaimer}</SampleNotice>
+            <div style={wrapperStyle}>
+              {SAMPLE_PLANS.map((plan) => (
+                <div key={plan.id} style={cardBase} data-mk-plan={plan.name}>
+                  <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700 }}>{plan.name}</h3>
+                  <div style={{ fontSize: "2rem", fontWeight: 700 }}>
+                    {describePlanPrice(plan, effectiveLocale, cycle).headline}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : null}
+      </div>
+    );
+  }
 
   if (error) {
     return <div role="alert" style={{ color: "var(--mk-muted)" }}>Unable to load pricing.</div>;
@@ -107,6 +141,7 @@ export function PricingTable({
       data-mk-component="pricing-table"
       data-mk-sample={isSample ? "true" : undefined}
     >
+      {config.severity === "warning" ? <ConfigNotice diagnostic={config} /> : null}
       {isSample ? <SampleNotice>{disclaimer}</SampleNotice> : null}
       {showBillingToggle ? (
         <BillingCycleToggle
