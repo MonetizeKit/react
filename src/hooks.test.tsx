@@ -58,18 +58,18 @@ describe("usePlans", () => {
     expect(result.current.loading).toBe(false);
     expect(result.current.isSample).toBe(false);
     expect(result.current.plans.map((plan) => plan.id)).toEqual(["plan_expensive", "plan_cheap"]);
-    expect(result.current.effectivePlans.map((plan) => plan.id)).toEqual(["plan_expensive", "plan_cheap"]);
+    expect(result.current.rawPlans.map((plan) => plan.id)).toEqual(["plan_expensive", "plan_cheap"]);
   });
 
-  it("fetches live plans and sorts only fetched data for display", async () => {
+  it("returns live plans sorted for display while preserving raw fetched order", async () => {
     mockPlansResponse([expensivePlan, cheapPlan]);
 
     const { result } = renderHook(() => usePlans(), { wrapper: wrapper() });
 
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.error).toBeNull();
-    expect(result.current.plans.map((plan) => plan.id)).toEqual(["plan_expensive", "plan_cheap"]);
-    expect(result.current.effectivePlans.map((plan) => plan.id)).toEqual(["plan_cheap", "plan_expensive"]);
+    expect(result.current.plans.map((plan) => plan.id)).toEqual(["plan_cheap", "plan_expensive"]);
+    expect(result.current.rawPlans.map((plan) => plan.id)).toEqual(["plan_expensive", "plan_cheap"]);
   });
 
   it("falls back to sample plans when the live catalog is empty", async () => {
@@ -79,8 +79,8 @@ describe("usePlans", () => {
 
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.isSample).toBe(true);
-    expect(result.current.plans).toEqual([]);
-    expect(result.current.effectivePlans).toEqual(SAMPLE_PLANS);
+    expect(result.current.plans).toEqual(SAMPLE_PLANS);
+    expect(result.current.rawPlans).toEqual([]);
   });
 
   it("can disable sample fallback for empty catalogs", async () => {
@@ -92,7 +92,8 @@ describe("usePlans", () => {
 
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.isSample).toBe(false);
-    expect(result.current.effectivePlans).toEqual([]);
+    expect(result.current.plans).toEqual([]);
+    expect(result.current.rawPlans).toEqual([]);
   });
 
   it("skips live fetch and exposes config error state when provider config is invalid", () => {
@@ -108,6 +109,7 @@ describe("usePlans", () => {
     expect(result.current.error?.message).toContain("publishable key is not set");
     expect(result.current.config.status).toBe("missing-key");
     expect(result.current.isSample).toBe(true);
-    expect(result.current.effectivePlans).toEqual(SAMPLE_PLANS);
+    expect(result.current.plans).toEqual(SAMPLE_PLANS);
+    expect(result.current.rawPlans).toEqual([]);
   });
 });

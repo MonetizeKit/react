@@ -151,7 +151,7 @@ export function PricingTable({
   renderBadge,
 }: PricingTableProps) {
   const { tokens } = useMonetizeKit();
-  const { effectivePlans, isSample, loading, error, config, locale: effectiveLocale } = usePlans({
+  const { plans, isSample, loading, error, config, locale: effectiveLocale } = usePlans({
     plans: plansProp,
     sampleWhenEmpty,
     locale,
@@ -178,7 +178,7 @@ export function PricingTable({
           <>
             <SampleNotice>{disclaimer}</SampleNotice>
             <PricingGrid
-              plans={effectivePlans}
+              plans={plans}
               cycle={cycle}
               locale={effectiveLocale}
               highlightPlan={highlightPlan}
@@ -204,7 +204,7 @@ export function PricingTable({
     return <div aria-busy="true" style={{ color: "var(--mk-muted)" }}>Loading pricing…</div>;
   }
 
-  if (effectivePlans.length === 0) {
+  if (plans.length === 0) {
     return <div style={{ color: "var(--mk-muted)" }}>No plans available.</div>;
   }
 
@@ -222,11 +222,11 @@ export function PricingTable({
         <BillingCycleToggle
           value={cycle}
           onChange={setCycle}
-          savingsPercent={Math.max(0, ...effectivePlans.map((p) => annualSavingsPercent(p) ?? 0))}
+          savingsPercent={Math.max(0, ...plans.map((p) => annualSavingsPercent(p) ?? 0))}
         />
       ) : null}
       <PricingGrid
-        plans={effectivePlans}
+        plans={plans}
         cycle={cycle}
         locale={effectiveLocale}
         highlightPlan={highlightPlan}

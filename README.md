@@ -86,10 +86,46 @@ function ExportButton() {
 
 Scoped to the customer you pass to the provider (`customerId` / `customerToken`):
 
+- `usePlans(options?)` → `{ plans, rawPlans, isSample, loading, error, config, locale }`
 - `useEntitlement(featureKey)` → `{ allowed, value, loading, error }`
 - `useUsage(meterId)` → `{ current, limit, loading, error }`
 - `useCredits()` → `{ balance, currency, loading, error }`
 - `useMonetizeKit()` → the configured client + resolved theme tokens
+
+`usePlans()` is the headless pricing-table data layer. `plans` is display-ready:
+live catalogs are sorted low-to-high, empty catalogs can fall back to
+`SAMPLE_PLANS`, and an explicit `plans` option preserves your caller-provided
+order. Use `rawPlans` only when you need the unmodified fetched/provided array.
+
+```tsx
+const { plans, rawPlans, isSample, loading, error } = usePlans();
+```
+
+## Pricing table customization
+
+Use `renderPlanCard` to replace the card markup while keeping MonetizeKit's
+fetching, sample fallback, sorting, pricing display, CTA helpers, and feature
+extraction:
+
+```tsx
+import { PricingTable } from "@monetizekit/react";
+
+<PricingTable
+  highlightPlan="Pro"
+  classNames={{ root: "pricing", card: "pricing-card", cta: "pricing-cta" }}
+  renderPlanCard={(plan, ctx) => (
+    <article>
+      <h3>{plan.name}</h3>
+      <p>{ctx.price.contactSales ? "Custom" : ctx.price.headline}</p>
+      <button onClick={ctx.primaryAction}>{ctx.ctaLabel}</button>
+    </article>
+  )}
+/>;
+```
+
+`classNames` appends slot-level classes to the built-in pricing table classes.
+`includedFeatures(plan, locale, max)` is exported for custom layouts that want
+the same localized entitlement rows used by the default cards.
 
 ## Theming
 
@@ -125,6 +161,13 @@ sample data** instead of an empty shell:
 <CustomerPortal sample />            {/* a representative portal with the disclaimer */}
 <PricingTable plans={[]} sampleWhenEmpty={false} />  {/* opt out → plain empty state */}
 ```
+
+## Storybook
+
+The local gallery reads `STORYBOOK_MONETIZEKIT_BASE_URL` and
+`STORYBOOK_MONETIZEKIT_PUBLISHABLE_KEY`; when unset it uses
+`https://app.monetizekit.app` and `pk_demo`. The toolbar also includes a
+Publishable Key field, which overrides the env/default key for live stories.
 
 ## TypeScript
 

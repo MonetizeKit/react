@@ -55,7 +55,7 @@ export interface UsePlansOptions {
   plans?: Plan[];
   /**
    * When no plans are available, expose illustrative sample plans through
-   * `effectivePlans`. Defaults to `true`.
+   * `plans`. Defaults to `true`.
    */
   sampleWhenEmpty?: boolean;
   /** Locale override for sample formatting consumers; defaults to provider locale. */
@@ -63,10 +63,10 @@ export interface UsePlansOptions {
 }
 
 export interface UsePlansResult {
-  /** Raw caller-provided or live-fetched plans, never sample data. */
-  plans: Plan[];
   /** Plans ready for display after sample fallback and live-only sorting. */
-  effectivePlans: Plan[];
+  plans: Plan[];
+  /** Raw caller-provided or live-fetched plans, never sample data. */
+  rawPlans: Plan[];
   isSample: boolean;
   loading: boolean;
   error: Error | null;
@@ -122,15 +122,15 @@ export function usePlans(options: UsePlansOptions = {}): UsePlansResult {
     const loading = hasPlansProp || configError ? false : state.loading;
     const error = hasPlansProp ? null : state.error;
     const isSample = !loading && rawPlans.length === 0 && sampleWhenEmpty;
-    const effectivePlans = isSample
+    const displayPlans = isSample
       ? SAMPLE_PLANS
       : hasPlansProp
         ? rawPlans
         : sortPlansForDisplay(rawPlans);
 
     return {
-      plans: rawPlans,
-      effectivePlans,
+      plans: displayPlans,
+      rawPlans,
       isSample,
       loading,
       error,
