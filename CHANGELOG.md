@@ -1,5 +1,11 @@
 # @monetizekit/react
 
+## 0.9.0
+
+### Minor Changes
+
+- 27cf473: Add pricing template support to the React SDK with templated plan fetching, `usePricingTemplate`, template metadata types, and live templated Storybook examples.
+
 ## 0.8.0
 
 ### Minor Changes
