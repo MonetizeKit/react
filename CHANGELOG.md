@@ -1,5 +1,13 @@
 # @monetizekit/react
 
+## 0.8.0
+
+### Minor Changes
+
+- 808fe1a: Add the headless `usePlans` hook, export the reusable `includedFeatures` helper, and let `PricingTable` accept custom plan card rendering plus slot class names.
+
+  Storybook now reads optional MonetizeKit live configuration from `STORYBOOK_MONETIZEKIT_BASE_URL` and `STORYBOOK_MONETIZEKIT_PUBLISHABLE_KEY`, surfaces a publishable-key global, and displays the package version in the UI.
+
 ## 0.7.1
 
 ### Patch Changes
