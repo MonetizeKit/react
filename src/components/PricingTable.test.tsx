@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MonetizeKitProvider } from "../provider";
 import { PricingTable } from "./PricingTable";
 import type { Plan } from "../types";
@@ -35,6 +35,10 @@ function renderTable(props: Partial<React.ComponentProps<typeof PricingTable>> =
 }
 
 describe("PricingTable", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it("renders all plans with the controlled plans prop (no fetch)", () => {
     renderTable();
     expect(screen.getByText("Free")).toBeInTheDocument();
@@ -84,5 +88,41 @@ describe("PricingTable", () => {
     expect(onSelectPlan).toHaveBeenCalledWith("plan_scale");
     expect(document.querySelector(".outer-shell.custom-root")).toBeInTheDocument();
     expect(document.querySelector(".custom-grid")).toBeInTheDocument();
+  });
+
+  it("fetches and renders templated plans when the template prop is provided", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        data: [
+          {
+            id: "plan_template",
+            name: "Homepage Plan",
+            pricing: [{ type: "flat", amount: 199, currency: "USD", interval: "monthly" }],
+          },
+        ],
+        template: {
+          key: "homepage",
+          name: "Homepage",
+          skin: "default",
+          locale: "en-US",
+          availableLocales: ["en-US"],
+        },
+        groups: [],
+      }),
+    } satisfies Partial<Response>);
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <MonetizeKitProvider publishableKey="pk_test" baseUrl="https://app.example.com" locale="en-US">
+        <PricingTable template="homepage" />
+      </MonetizeKitProvider>,
+    );
+
+    await waitFor(() => expect(screen.getByText("Homepage Plan")).toBeInTheDocument());
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://app.example.com/api/v1/plans?page=1&pageSize=100&template=homepage&locale=en-US",
+      { headers: { Authorization: "Bearer pk_test" } },
+    );
   });
 });

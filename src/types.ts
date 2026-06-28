@@ -38,6 +38,55 @@ export interface Plan {
   pricing?: PricingTerm[];
 }
 
+export interface PricingTemplateSection {
+  heading?: string;
+  subheading?: string;
+  ctaLabel?: string;
+  contactSalesLabel?: string;
+}
+
+export interface PricingTemplateBilling {
+  defaultCycle?: "monthly" | "annually";
+  showToggle?: boolean;
+}
+
+export interface PricingTemplateFeature {
+  featureKey: string;
+  label?: string;
+  visible?: boolean;
+  order?: number;
+}
+
+export interface PricingTemplateFeatureGroup {
+  id: string;
+  label: string;
+  order?: number;
+  features: PricingTemplateFeature[];
+}
+
+export interface PricingTemplateSummary {
+  key: string;
+  name: string;
+  description?: string;
+  skin: string;
+  locale: string;
+  availableLocales: string[];
+  section?: PricingTemplateSection;
+  billing?: PricingTemplateBilling;
+}
+
+export interface PricingTemplatePlansResponse<TPlan extends Plan = Plan> {
+  data: TPlan[];
+  total?: number;
+  page?: number;
+  pageSize?: number;
+  totalPages?: number;
+  hasNext?: boolean;
+  hasPrev?: boolean;
+  template?: PricingTemplateSummary;
+  groups?: PricingTemplateFeatureGroup[];
+}
+
 export interface EntitlementResult {
   featureKey: string;
   value: string | number | boolean | null;

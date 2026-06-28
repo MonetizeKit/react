@@ -119,3 +119,40 @@ export const Live: StoryObj<{ publishableKey?: string; baseUrl?: string }> = {
     );
   },
 };
+
+/**
+ * Live template story. Provide a publishable key and template key to render the
+ * presentation metadata returned by GET /api/v1/plans?template=...
+ */
+export const Templated: StoryObj<{
+  publishableKey?: string;
+  baseUrl?: string;
+  templateKey?: string;
+}> = {
+  args: { publishableKey: "", baseUrl: "", templateKey: "homepage" },
+  render: (args, context) => {
+    const publishableKey =
+      args.publishableKey ||
+      (context.globals.publishableKey as string | undefined) ||
+      storybookPublishableKey;
+    const baseUrl = args.baseUrl || storybookBaseUrl;
+    const templateKey = args.templateKey || "homepage";
+    const hasLiveKey = Boolean(publishableKey && publishableKey !== "pk_demo");
+
+    return hasLiveKey ? (
+      <MonetizeKitProvider
+        publishableKey={publishableKey}
+        baseUrl={baseUrl}
+        appearance="memphis"
+        locale={(context.globals.locale as string | undefined) ?? "en-US"}
+      >
+        <PricingTable template={templateKey} />
+      </MonetizeKitProvider>
+    ) : (
+      <p data-testid="template-needs-args">
+        Provide a publishable key via the toolbar, story args, or
+        STORYBOOK_MONETIZEKIT_PUBLISHABLE_KEY to render a live pricing template.
+      </p>
+    );
+  },
+};

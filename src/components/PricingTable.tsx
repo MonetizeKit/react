@@ -49,6 +49,8 @@ export interface PricingPlanCardRenderContext {
 export interface PricingTableProps {
   /** Plans to render; if omitted, fetched live from the publishable-key API. */
   plans?: Plan[];
+  /** Optional pricing presentation template key for live plan fetches. */
+  template?: string;
   /** Plan name to highlight as "Most Popular". */
   highlightPlan?: string;
   /** Active billing cycle (controlled). With `showBillingToggle`, also the initial value. */
@@ -135,13 +137,14 @@ function cx(...classes: Array<string | undefined | false>): string | undefined {
 
 export function PricingTable({
   plans: plansProp,
+  template: templateKey,
   highlightPlan,
   billingCycle,
   showBillingToggle = false,
   locale,
   onSelectPlan,
   onContactSales,
-  ctaLabel = "Get started",
+  ctaLabel,
   maxFeatures = 8,
   sampleWhenEmpty = true,
   disclaimer,
@@ -151,16 +154,28 @@ export function PricingTable({
   renderBadge,
 }: PricingTableProps) {
   const { tokens } = useMonetizeKit();
-  const { plans, isSample, loading, error, config, locale: effectiveLocale } = usePlans({
+  const {
+    plans,
+    template,
+    isSample,
+    loading,
+    error,
+    config,
+    locale: effectiveLocale,
+  } = usePlans({
     plans: plansProp,
     sampleWhenEmpty,
     locale,
+    template: templateKey,
   });
-  const [cycle, setCycle] = useState<"monthly" | "annually">(billingCycle ?? "monthly");
+  const defaultCycle = billingCycle ?? template?.billing?.defaultCycle ?? "monthly";
+  const effectiveCtaLabel = ctaLabel ?? template?.section?.ctaLabel ?? "Get started";
+  const contactSalesLabel = template?.section?.contactSalesLabel ?? "Contact Sales";
+  const [cycle, setCycle] = useState<"monthly" | "annually">(defaultCycle);
 
   useEffect(() => {
-    if (billingCycle) setCycle(billingCycle);
-  }, [billingCycle]);
+    setCycle(defaultCycle);
+  }, [defaultCycle]);
 
   // Missing/malformed key (or base URL): show the developer reminder, plus
   // sample plans so the layout is still previewable.
@@ -183,7 +198,8 @@ export function PricingTable({
               locale={effectiveLocale}
               highlightPlan={highlightPlan}
               maxFeatures={maxFeatures}
-              ctaLabel={ctaLabel}
+              ctaLabel={effectiveCtaLabel}
+              contactSalesLabel={contactSalesLabel}
               onSelectPlan={onSelectPlan}
               onContactSales={onContactSales}
               renderPlanCard={renderPlanCard}
@@ -213,12 +229,13 @@ export function PricingTable({
       className={cx("mk-pricing-table", className, classNames?.root)}
       style={{ ...tokensToStyle(tokens), ...wrapperStyle }}
       data-mk-component="pricing-table"
+      data-mk-template={template?.key}
       data-mk-sample={isSample ? "true" : undefined}
     >
       <PricingTableStyles />
       {config.severity === "warning" ? <ConfigNotice diagnostic={config} /> : null}
       {isSample ? <SampleNotice>{disclaimer}</SampleNotice> : null}
-      {showBillingToggle ? (
+      {showBillingToggle || template?.billing?.showToggle ? (
         <BillingCycleToggle
           value={cycle}
           onChange={setCycle}
@@ -231,7 +248,8 @@ export function PricingTable({
         locale={effectiveLocale}
         highlightPlan={highlightPlan}
         maxFeatures={maxFeatures}
-        ctaLabel={ctaLabel}
+        ctaLabel={effectiveCtaLabel}
+        contactSalesLabel={contactSalesLabel}
         onSelectPlan={onSelectPlan}
         onContactSales={onContactSales}
         renderPlanCard={renderPlanCard}
@@ -250,6 +268,7 @@ function PricingGrid({
   highlightPlan,
   maxFeatures,
   ctaLabel,
+  contactSalesLabel,
   onSelectPlan,
   onContactSales,
   renderPlanCard,
@@ -263,6 +282,7 @@ function PricingGrid({
   highlightPlan?: string;
   maxFeatures: number;
   ctaLabel: string;
+  contactSalesLabel: string;
   onSelectPlan?: (planId: string) => void;
   onContactSales?: (planId: string) => void;
   renderPlanCard?: (plan: Plan, ctx: PricingPlanCardRenderContext) => ReactNode;
@@ -291,7 +311,7 @@ function PricingGrid({
           cycle,
           locale,
           ctaLabel,
-          contactSalesLabel: "Contact Sales",
+          contactSalesLabel,
           selectPlan,
           contactSales,
           primaryAction: price.contactSales ? contactSales : selectPlan,
@@ -337,7 +357,7 @@ function PricingGrid({
               )}
               onClick={ctx.primaryAction}
             >
-              {price.contactSales ? "Contact Sales" : ctaLabel}
+              {price.contactSales ? contactSalesLabel : ctaLabel}
             </button>
             {features.length > 0 ? (
               <>

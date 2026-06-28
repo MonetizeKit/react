@@ -8,6 +8,7 @@ const expectedFunctions = [
   "MonetizeKitProvider",
   "useMonetizeKit",
   "usePlans",
+  "usePricingTemplate",
   "useEntitlement",
   "useUsage",
   "useCredits",
