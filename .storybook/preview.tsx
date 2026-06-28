@@ -8,6 +8,16 @@ import {
   type ThemeMode,
 } from "../src/theme/tokens";
 
+const storybookEnv = (import.meta as ImportMeta & {
+  env?: Record<string, string | undefined>;
+}).env ?? {};
+
+export const STORYBOOK_MONETIZEKIT_BASE_URL =
+  storybookEnv.STORYBOOK_MONETIZEKIT_BASE_URL || "https://app.monetizekit.app";
+
+export const STORYBOOK_MONETIZEKIT_PUBLISHABLE_KEY =
+  storybookEnv.STORYBOOK_MONETIZEKIT_PUBLISHABLE_KEY || "pk_demo";
+
 /**
  * Global toolbar controls let you switch theme, locale, and currency for the
  * whole gallery — so each component has a single story rather than one per
@@ -64,6 +74,10 @@ const preview: Preview = {
         dynamicTitle: true,
       },
     },
+    publishableKey: {
+      description: "MonetizeKit publishable key for live Storybook stories",
+      defaultValue: STORYBOOK_MONETIZEKIT_PUBLISHABLE_KEY,
+    },
   },
   decorators: [
     (Story, context) => {
@@ -71,6 +85,9 @@ const preview: Preview = {
       const mode = (context.globals.mode as ThemeMode) ?? "light";
       const locale = (context.globals.locale as string) ?? "en-US";
       const currency = (context.globals.currency as string) ?? "USD";
+      const publishableKey =
+        (context.globals.publishableKey as string | undefined) ??
+        STORYBOOK_MONETIZEKIT_PUBLISHABLE_KEY;
       const appearance = { theme, mode };
       const prefersDark =
         typeof window !== "undefined" && window.matchMedia
@@ -78,8 +95,8 @@ const preview: Preview = {
           : false;
       return (
         <MonetizeKitProvider
-          publishableKey="pk_demo"
-          baseUrl="https://app.monetizekit.app"
+          publishableKey={publishableKey}
+          baseUrl={STORYBOOK_MONETIZEKIT_BASE_URL}
           appearance={appearance}
           locale={locale}
           currency={currency}
