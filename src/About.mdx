@@ -1,0 +1,13 @@
+import { Meta } from "@storybook/blocks";
+import { version } from "../package.json";
+
+<Meta title="Docs/About" />
+
+# MonetizeKit UI v{version}
+
+Use these optional environment variables to point Storybook at a live MonetizeKit catalog:
+
+- `STORYBOOK_MONETIZEKIT_BASE_URL`
+- `STORYBOOK_MONETIZEKIT_PUBLISHABLE_KEY`
+
+If no publishable key is provided, Storybook falls back to `pk_demo` for sample-safe local browsing.

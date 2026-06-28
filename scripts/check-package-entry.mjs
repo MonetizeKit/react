@@ -7,6 +7,7 @@ import * as mk from "../dist/index.js";
 const expectedFunctions = [
   "MonetizeKitProvider",
   "useMonetizeKit",
+  "usePlans",
   "useEntitlement",
   "useUsage",
   "useCredits",
@@ -28,6 +29,7 @@ const expectedFunctions = [
   "describePlanPrice",
   "planSortValue",
   "sortPlansForDisplay",
+  "includedFeatures",
   "MonetizeKitClient",
 ];
 

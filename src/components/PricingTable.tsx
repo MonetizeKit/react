@@ -1,13 +1,50 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { useMonetizeKit } from "../provider";
+import { usePlans } from "../hooks";
 import { tokensToStyle } from "../theme/tokens";
-import { describePlanPrice, annualSavingsPercent, formatUnits, sortPlansForDisplay } from "../lib/format";
-import { SAMPLE_PLANS } from "../lib/sample-data";
+import { describePlanPrice, annualSavingsPercent, type PriceDisplay } from "../lib/format";
+import { includedFeatures, type FeatureRow } from "../lib/pricing";
 import { SampleNotice } from "./SampleNotice";
 import { ConfigNotice } from "./ConfigNotice";
 import { BillingCycleToggle } from "./BillingCycleToggle";
 import { CheckCircleIcon } from "./icons";
+import type { ConfigDiagnostic } from "../lib/config-diagnostics";
 import type { Plan } from "../types";
+
+export interface PricingTableClassNames {
+  root?: string;
+  grid?: string;
+  card?: string;
+  highlightedCard?: string;
+  badge?: string;
+  name?: string;
+  description?: string;
+  price?: string;
+  amount?: string;
+  caption?: string;
+  cta?: string;
+  primaryCta?: string;
+  ghostCta?: string;
+  featureLabel?: string;
+  features?: string;
+  feature?: string;
+  check?: string;
+}
+
+export interface PricingPlanCardRenderContext {
+  price: PriceDisplay;
+  highlighted: boolean;
+  features: FeatureRow[];
+  cycle: "monthly" | "annually";
+  locale?: string;
+  ctaLabel: string;
+  contactSalesLabel: string;
+  selectPlan: () => void;
+  contactSales: () => void;
+  primaryAction: () => void;
+  config: ConfigDiagnostic;
+  classNames?: PricingTableClassNames;
+}
 
 export interface PricingTableProps {
   /** Plans to render; if omitted, fetched live from the publishable-key API. */
@@ -33,9 +70,15 @@ export interface PricingTableProps {
   sampleWhenEmpty?: boolean;
   /** Override the sample-data disclaimer copy. */
   disclaimer?: ReactNode;
+  /** Additional class name for the outer wrapper. */
+  className?: string;
+  /** Slot-level class names appended to the default MonetizeKit classes. */
+  classNames?: PricingTableClassNames;
+  /** Fully customize each plan card while reusing PricingTable data/context. */
+  renderPlanCard?: (plan: Plan, ctx: PricingPlanCardRenderContext) => ReactNode;
+  /** Customize the highlighted plan badge. */
+  renderBadge?: (plan: Plan, ctx: PricingPlanCardRenderContext) => ReactNode;
 }
-
-const UNLIMITED_THRESHOLD = 9999;
 
 /**
  * Scoped, token-driven stylesheet for the pricing grid. Inline styles can't
@@ -85,33 +128,9 @@ const wrapperStyle: CSSProperties = {
   gap: "1.25rem",
 };
 
-interface FeatureRow {
-  key: string;
-  label: string;
-}
-
-/**
- * Derive a clean "what's included" list from a plan's entitlements: include
- * boolean entitlements only when granted, render limits/values inline, and skip
- * features the plan does not have so cards never advertise absent capabilities.
- */
-function includedFeatures(plan: Plan, locale: string | undefined, max: number): FeatureRow[] {
-  const rows: FeatureRow[] = [];
-  for (const ent of plan.entitlements ?? []) {
-    if (ent.type === "boolean") {
-      if (ent.value === true) rows.push({ key: ent.featureKey, label: ent.featureDisplayName });
-    } else if (ent.type === "limit") {
-      const n = Number(ent.value);
-      rows.push({
-        key: ent.featureKey,
-        label: `${ent.featureDisplayName}: ${n >= UNLIMITED_THRESHOLD ? "Unlimited" : formatUnits(n, locale)}`,
-      });
-    } else {
-      rows.push({ key: ent.featureKey, label: `${ent.featureDisplayName}: ${String(ent.value)}` });
-    }
-    if (rows.length >= max) break;
-  }
-  return rows;
+function cx(...classes: Array<string | undefined | false>): string | undefined {
+  const value = classes.filter(Boolean).join(" ");
+  return value || undefined;
 }
 
 export function PricingTable({
@@ -126,46 +145,29 @@ export function PricingTable({
   maxFeatures = 8,
   sampleWhenEmpty = true,
   disclaimer,
+  className,
+  classNames,
+  renderPlanCard,
+  renderBadge,
 }: PricingTableProps) {
-  const { client, tokens, locale: ctxLocale, config } = useMonetizeKit();
-  const effectiveLocale = locale ?? ctxLocale;
-  // A config error (e.g. missing publishable key) means a live fetch can't
-  // succeed — skip it and show an actionable notice instead of a doomed request.
-  const configError = !plansProp && config.severity === "error";
-  const [plans, setPlans] = useState<Plan[] | null>(plansProp ?? null);
-  const [error, setError] = useState<Error | null>(null);
+  const { tokens } = useMonetizeKit();
+  const { plans, isSample, loading, error, config, locale: effectiveLocale } = usePlans({
+    plans: plansProp,
+    sampleWhenEmpty,
+    locale,
+  });
   const [cycle, setCycle] = useState<"monthly" | "annually">(billingCycle ?? "monthly");
 
   useEffect(() => {
     if (billingCycle) setCycle(billingCycle);
   }, [billingCycle]);
 
-  useEffect(() => {
-    if (plansProp) {
-      setPlans(plansProp);
-      return;
-    }
-    if (configError) return;
-    let active = true;
-    client
-      .listPlans<{ data: Plan[] }>()
-      .then((res) => {
-        if (active) setPlans(res.data ?? []);
-      })
-      .catch((e: unknown) => {
-        if (active) setError(e instanceof Error ? e : new Error(String(e)));
-      });
-    return () => {
-      active = false;
-    };
-  }, [client, plansProp, configError]);
-
   // Missing/malformed key (or base URL): show the developer reminder, plus
   // sample plans so the layout is still previewable.
-  if (configError) {
+  if (!plansProp && config.severity === "error") {
     return (
       <div
-        className="mk-pricing-table"
+        className={cx("mk-pricing-table", className, classNames?.root)}
         style={{ ...tokensToStyle(tokens), ...wrapperStyle }}
         data-mk-component="pricing-table"
         data-mk-config-error="true"
@@ -176,7 +178,7 @@ export function PricingTable({
           <>
             <SampleNotice>{disclaimer}</SampleNotice>
             <PricingGrid
-              plans={SAMPLE_PLANS}
+              plans={plans}
               cycle={cycle}
               locale={effectiveLocale}
               highlightPlan={highlightPlan}
@@ -184,6 +186,10 @@ export function PricingTable({
               ctaLabel={ctaLabel}
               onSelectPlan={onSelectPlan}
               onContactSales={onContactSales}
+              renderPlanCard={renderPlanCard}
+              renderBadge={renderBadge}
+              classNames={classNames}
+              config={config}
             />
           </>
         ) : null}
@@ -194,25 +200,17 @@ export function PricingTable({
   if (error) {
     return <div role="alert" style={{ color: "var(--mk-muted)" }}>Unable to load pricing.</div>;
   }
-  if (!plans) {
+  if (loading) {
     return <div aria-busy="true" style={{ color: "var(--mk-muted)" }}>Loading pricing…</div>;
   }
 
-  const isSample = plans.length === 0 && sampleWhenEmpty;
-  // Order live catalog data cheapest-first; respect a caller's explicit order.
-  const effectivePlans = isSample
-    ? SAMPLE_PLANS
-    : plansProp
-      ? plans
-      : sortPlansForDisplay(plans);
-
-  if (effectivePlans.length === 0) {
+  if (plans.length === 0) {
     return <div style={{ color: "var(--mk-muted)" }}>No plans available.</div>;
   }
 
   return (
     <div
-      className="mk-pricing-table"
+      className={cx("mk-pricing-table", className, classNames?.root)}
       style={{ ...tokensToStyle(tokens), ...wrapperStyle }}
       data-mk-component="pricing-table"
       data-mk-sample={isSample ? "true" : undefined}
@@ -224,11 +222,11 @@ export function PricingTable({
         <BillingCycleToggle
           value={cycle}
           onChange={setCycle}
-          savingsPercent={Math.max(0, ...effectivePlans.map((p) => annualSavingsPercent(p) ?? 0))}
+          savingsPercent={Math.max(0, ...plans.map((p) => annualSavingsPercent(p) ?? 0))}
         />
       ) : null}
       <PricingGrid
-        plans={effectivePlans}
+        plans={plans}
         cycle={cycle}
         locale={effectiveLocale}
         highlightPlan={highlightPlan}
@@ -236,6 +234,10 @@ export function PricingTable({
         ctaLabel={ctaLabel}
         onSelectPlan={onSelectPlan}
         onContactSales={onContactSales}
+        renderPlanCard={renderPlanCard}
+        renderBadge={renderBadge}
+        classNames={classNames}
+        config={config}
       />
     </div>
   );
@@ -250,6 +252,10 @@ function PricingGrid({
   ctaLabel,
   onSelectPlan,
   onContactSales,
+  renderPlanCard,
+  renderBadge,
+  classNames,
+  config,
 }: {
   plans: Plan[];
   cycle: "monthly" | "annually";
@@ -259,46 +265,87 @@ function PricingGrid({
   ctaLabel: string;
   onSelectPlan?: (planId: string) => void;
   onContactSales?: (planId: string) => void;
+  renderPlanCard?: (plan: Plan, ctx: PricingPlanCardRenderContext) => ReactNode;
+  renderBadge?: (plan: Plan, ctx: PricingPlanCardRenderContext) => ReactNode;
+  classNames?: PricingTableClassNames;
+  config: ConfigDiagnostic;
 }) {
   // Cap desktop columns so many plans still wrap into balanced rows.
   const cols = Math.min(plans.length, 4);
   return (
-    <div className="mk-pt-grid" style={{ ["--mk-pt-cols" as string]: String(cols) } as CSSProperties}>
+    <div
+      className={cx("mk-pt-grid", classNames?.grid)}
+      style={{ ["--mk-pt-cols" as string]: String(cols) } as CSSProperties}
+    >
       {plans.map((plan) => {
         const price = describePlanPrice(plan, locale, cycle);
         const highlighted =
           highlightPlan != null && plan.name.toLowerCase() === highlightPlan.toLowerCase();
         const features = includedFeatures(plan, locale, maxFeatures);
+        const selectPlan = () => onSelectPlan?.(plan.id);
+        const contactSales = () => onContactSales?.(plan.id);
+        const ctx: PricingPlanCardRenderContext = {
+          price,
+          highlighted,
+          features,
+          cycle,
+          locale,
+          ctaLabel,
+          contactSalesLabel: "Contact Sales",
+          selectPlan,
+          contactSales,
+          primaryAction: price.contactSales ? contactSales : selectPlan,
+          config,
+          classNames,
+        };
+        if (renderPlanCard) {
+          return <div key={plan.id}>{renderPlanCard(plan, ctx)}</div>;
+        }
         return (
           <div
             key={plan.id}
-            className="mk-pt-card"
+            className={cx("mk-pt-card", classNames?.card, highlighted && classNames?.highlightedCard)}
             data-mk-plan={plan.name}
             data-mk-highlighted={highlighted ? "true" : undefined}
           >
-            {highlighted ? <span className="mk-pt-badge">Most Popular</span> : null}
-            <h3 className="mk-pt-name">{plan.name}</h3>
-            {plan.description ? <p className="mk-pt-desc">{plan.description}</p> : null}
-            <div className="mk-pt-price">
-              <span className="mk-pt-amount">{price.contactSales ? "Custom" : price.headline}</span>
-              {price.caption ? <span className="mk-pt-caption">{price.caption}</span> : null}
+            {highlighted ? (
+              renderBadge ? (
+                renderBadge(plan, ctx)
+              ) : (
+                <span className={cx("mk-pt-badge", classNames?.badge)}>Most Popular</span>
+              )
+            ) : null}
+            <h3 className={cx("mk-pt-name", classNames?.name)}>{plan.name}</h3>
+            {plan.description ? (
+              <p className={cx("mk-pt-desc", classNames?.description)}>{plan.description}</p>
+            ) : null}
+            <div className={cx("mk-pt-price", classNames?.price)}>
+              <span className={cx("mk-pt-amount", classNames?.amount)}>
+                {price.contactSales ? "Custom" : price.headline}
+              </span>
+              {price.caption ? (
+                <span className={cx("mk-pt-caption", classNames?.caption)}>{price.caption}</span>
+              ) : null}
             </div>
             <button
               type="button"
-              className={`mk-pt-cta ${highlighted ? "mk-pt-cta--primary" : "mk-pt-cta--ghost"}`}
-              onClick={() =>
-                price.contactSales ? onContactSales?.(plan.id) : onSelectPlan?.(plan.id)
-              }
+              className={cx(
+                "mk-pt-cta",
+                highlighted ? "mk-pt-cta--primary" : "mk-pt-cta--ghost",
+                classNames?.cta,
+                highlighted ? classNames?.primaryCta : classNames?.ghostCta,
+              )}
+              onClick={ctx.primaryAction}
             >
               {price.contactSales ? "Contact Sales" : ctaLabel}
             </button>
             {features.length > 0 ? (
               <>
-                <div className="mk-pt-flabel">What's included:</div>
-                <ul className="mk-pt-features">
+                <div className={cx("mk-pt-flabel", classNames?.featureLabel)}>What's included:</div>
+                <ul className={cx("mk-pt-features", classNames?.features)}>
                   {features.map((f) => (
-                    <li key={f.key} className="mk-pt-feature">
-                      <CheckCircleIcon className="mk-pt-check" />
+                    <li key={f.key} className={cx("mk-pt-feature", classNames?.feature)}>
+                      <CheckCircleIcon className={cx("mk-pt-check", classNames?.check)} />
                       <span>{f.label}</span>
                     </li>
                   ))}

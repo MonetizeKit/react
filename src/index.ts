@@ -5,10 +5,22 @@ export {
   type MonetizeKitProviderProps,
   type MonetizeKitContextValue,
 } from "./provider";
-export { useEntitlement, useUsage, useCredits } from "./hooks";
+export {
+  usePlans,
+  useEntitlement,
+  useUsage,
+  useCredits,
+  type UsePlansOptions,
+  type UsePlansResult,
+} from "./hooks";
 
 // Components
-export { PricingTable, type PricingTableProps } from "./components/PricingTable";
+export {
+  PricingTable,
+  type PricingTableProps,
+  type PricingPlanCardRenderContext,
+  type PricingTableClassNames,
+} from "./components/PricingTable";
 export {
   PricingComparison,
   type PricingComparisonProps,
@@ -87,6 +99,10 @@ export {
   sortPlansForDisplay,
   type PriceDisplay,
 } from "./lib/format";
+export {
+  includedFeatures,
+  type FeatureRow,
+} from "./lib/pricing";
 
 // Client + types
 export { MonetizeKitClient, type MonetizeKitClientConfig } from "./lib/client";

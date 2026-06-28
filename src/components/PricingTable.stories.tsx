@@ -3,6 +3,15 @@ import { PricingTable } from "./PricingTable";
 import { MonetizeKitProvider } from "../provider";
 import type { Plan } from "../types";
 
+const storybookEnv = (import.meta as ImportMeta & {
+  env?: Record<string, string | undefined>;
+}).env ?? {};
+
+const storybookBaseUrl =
+  storybookEnv.STORYBOOK_MONETIZEKIT_BASE_URL || "https://app.monetizekit.app";
+const storybookPublishableKey =
+  storybookEnv.STORYBOOK_MONETIZEKIT_PUBLISHABLE_KEY || "pk_demo";
+
 // Theme / locale / currency are controlled from the toolbar (see .storybook
 // globals); the decorator provides the MonetizeKitProvider.
 const plans: Plan[] = [
@@ -80,25 +89,33 @@ export const SampleWhenEmpty: Story = { args: { plans: [], highlightPlan: "Growt
 
 /**
  * Live external-consumer story. Renders the PricingTable against a real catalog
- * API via a browser-safe publishable key — driven by URL args in the live E2E
- * job (`?args=publishableKey:...;baseUrl:...`). With empty args (the default in
- * the gallery) it shows a hint, so it's only meaningfully exercised by the live
- * E2E. No secret is baked into the Storybook build.
+ * API via a browser-safe publishable key. The key can come from story args, the
+ * Storybook publishableKey global, or STORYBOOK_MONETIZEKIT_PUBLISHABLE_KEY.
+ * The base URL defaults from STORYBOOK_MONETIZEKIT_BASE_URL.
  */
 export const Live: StoryObj<{ publishableKey?: string; baseUrl?: string }> = {
   args: { publishableKey: "", baseUrl: "" },
-  render: (args) =>
-    args.publishableKey && args.baseUrl ? (
+  render: (args, context) => {
+    const publishableKey =
+      args.publishableKey ||
+      (context.globals.publishableKey as string | undefined) ||
+      storybookPublishableKey;
+    const baseUrl = args.baseUrl || storybookBaseUrl;
+    const hasLiveKey = Boolean(publishableKey && publishableKey !== "pk_demo");
+
+    return hasLiveKey ? (
       <MonetizeKitProvider
-        publishableKey={args.publishableKey}
-        baseUrl={args.baseUrl}
+        publishableKey={publishableKey}
+        baseUrl={baseUrl}
         appearance="memphis"
       >
         <PricingTable highlightPlan="Pro" />
       </MonetizeKitProvider>
     ) : (
       <p data-testid="live-needs-args">
-        Provide publishableKey + baseUrl args to render live.
+        Provide a publishable key via the toolbar, story args, or
+        STORYBOOK_MONETIZEKIT_PUBLISHABLE_KEY to render live pricing.
       </p>
-    ),
+    );
+  },
 };
