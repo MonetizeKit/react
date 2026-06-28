@@ -8,6 +8,13 @@ export interface MonetizeKitClientConfig {
   customerToken?: string;
 }
 
+export interface ListPlansOptions {
+  template?: string;
+  locale?: string;
+  page?: number;
+  pageSize?: number;
+}
+
 export class MonetizeKitClient {
   constructor(private readonly config: MonetizeKitClientConfig) {}
 
@@ -25,8 +32,13 @@ export class MonetizeKitClient {
     return (await res.json()) as T;
   }
 
-  listPlans<T>(): Promise<T> {
-    return this.get<T>("/api/v1/plans?page=1&pageSize=100");
+  listPlans<T>(options: ListPlansOptions = {}): Promise<T> {
+    const params = new URLSearchParams();
+    params.set("page", String(options.page ?? 1));
+    params.set("pageSize", String(options.pageSize ?? 100));
+    if (options.template) params.set("template", options.template);
+    if (options.locale) params.set("locale", options.locale);
+    return this.get<T>(`/api/v1/plans?${params.toString()}`);
   }
 
   getEntitlement<T>(customerId: string, featureKey: string): Promise<T> {

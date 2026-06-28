@@ -7,11 +7,14 @@ export {
 } from "./provider";
 export {
   usePlans,
+  usePricingTemplate,
   useEntitlement,
   useUsage,
   useCredits,
   type UsePlansOptions,
   type UsePlansResult,
+  type UsePricingTemplateOptions,
+  type UsePricingTemplateResult,
 } from "./hooks";
 
 // Components
@@ -105,10 +108,20 @@ export {
 } from "./lib/pricing";
 
 // Client + types
-export { MonetizeKitClient, type MonetizeKitClientConfig } from "./lib/client";
+export {
+  MonetizeKitClient,
+  type ListPlansOptions,
+  type MonetizeKitClientConfig,
+} from "./lib/client";
 export type {
   Plan,
   PlanEntitlement,
+  PricingTemplateBilling,
+  PricingTemplateFeature,
+  PricingTemplateFeatureGroup,
+  PricingTemplatePlansResponse,
+  PricingTemplateSection,
+  PricingTemplateSummary,
   PricingTerm,
   PricingTier,
   EntitlementResult,

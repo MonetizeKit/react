@@ -3,7 +3,15 @@ import { useMonetizeKit } from "./provider";
 import { SAMPLE_PLANS } from "./lib/sample-data";
 import { sortPlansForDisplay } from "./lib/format";
 import type { ConfigDiagnostic } from "./lib/config-diagnostics";
-import type { CreditBalance, EntitlementResult, Plan, UsageResult } from "./types";
+import type {
+  CreditBalance,
+  EntitlementResult,
+  Plan,
+  PricingTemplateFeatureGroup,
+  PricingTemplatePlansResponse,
+  PricingTemplateSummary,
+  UsageResult,
+} from "./types";
 
 interface AsyncState<T> {
   data: T | null;
@@ -60,6 +68,12 @@ export interface UsePlansOptions {
   sampleWhenEmpty?: boolean;
   /** Locale override for sample formatting consumers; defaults to provider locale. */
   locale?: string;
+  /** Optional pricing presentation template key for live plan fetches. */
+  template?: string;
+  /** Live API page number. Defaults to 1. */
+  page?: number;
+  /** Live API page size. Defaults to 100. */
+  pageSize?: number;
 }
 
 export interface UsePlansResult {
@@ -72,16 +86,21 @@ export interface UsePlansResult {
   error: Error | null;
   config: ConfigDiagnostic;
   locale?: string;
+  template?: PricingTemplateSummary;
+  groups?: PricingTemplateFeatureGroup[];
 }
+
+type PlansResponse = PricingTemplatePlansResponse<Plan>;
 
 /** Fetch and normalize pricing plans for headless consumers and SDK components. */
 export function usePlans(options: UsePlansOptions = {}): UsePlansResult {
   const { client, config, locale: ctxLocale } = useMonetizeKit();
-  const { plans: plansProp, sampleWhenEmpty = true, locale } = options;
+  const { plans: plansProp, sampleWhenEmpty = true, locale, page, pageSize } = options;
+  const templateKey = options.template?.trim() || undefined;
   const hasPlansProp = plansProp !== undefined;
   const effectiveLocale = locale ?? ctxLocale;
   const configError = !hasPlansProp && config.severity === "error";
-  const [state, setState] = useState<AsyncState<Plan[]>>({
+  const [state, setState] = useState<AsyncState<PlansResponse>>({
     data: null,
     loading: !hasPlansProp && !configError,
     error: null,
@@ -92,21 +111,26 @@ export function usePlans(options: UsePlansOptions = {}): UsePlansResult {
       return;
     }
     if (configError) {
-      setState({ data: [], loading: false, error: new Error(config.title) });
+      setState({ data: { data: [] }, loading: false, error: new Error(config.title) });
       return;
     }
 
     let active = true;
     setState((prev) => ({ ...prev, loading: true, error: null }));
     client
-      .listPlans<{ data: Plan[] }>()
+      .listPlans<PlansResponse>({
+        template: templateKey,
+        locale: templateKey ? effectiveLocale : undefined,
+        page,
+        pageSize,
+      })
       .then((res) => {
-        if (active) setState({ data: res.data ?? [], loading: false, error: null });
+        if (active) setState({ data: res, loading: false, error: null });
       })
       .catch((error: unknown) => {
         if (active) {
           setState({
-            data: [],
+            data: { data: [] },
             loading: false,
             error: error instanceof Error ? error : new Error(String(error)),
           });
@@ -115,10 +139,21 @@ export function usePlans(options: UsePlansOptions = {}): UsePlansResult {
     return () => {
       active = false;
     };
-  }, [client, plansProp, hasPlansProp, configError, config.title]);
+  }, [
+    client,
+    plansProp,
+    hasPlansProp,
+    configError,
+    config.title,
+    templateKey,
+    effectiveLocale,
+    page,
+    pageSize,
+  ]);
 
   return useMemo(() => {
-    const rawPlans = plansProp ?? state.data ?? [];
+    const response = state.data;
+    const rawPlans = plansProp ?? response?.data ?? [];
     const loading = hasPlansProp || configError ? false : state.loading;
     const error = hasPlansProp ? null : state.error;
     const isSample = !loading && rawPlans.length === 0 && sampleWhenEmpty;
@@ -126,7 +161,9 @@ export function usePlans(options: UsePlansOptions = {}): UsePlansResult {
       ? SAMPLE_PLANS
       : hasPlansProp
         ? rawPlans
-        : sortPlansForDisplay(rawPlans);
+        : templateKey
+          ? rawPlans
+          : sortPlansForDisplay(rawPlans);
 
     return {
       plans: displayPlans,
@@ -136,8 +173,105 @@ export function usePlans(options: UsePlansOptions = {}): UsePlansResult {
       error,
       config,
       locale: effectiveLocale,
+      template: hasPlansProp ? undefined : response?.template,
+      groups: hasPlansProp ? undefined : response?.groups,
     };
-  }, [config, configError, effectiveLocale, hasPlansProp, plansProp, sampleWhenEmpty, state]);
+  }, [config, configError, effectiveLocale, hasPlansProp, plansProp, sampleWhenEmpty, state, templateKey]);
+}
+
+export interface UsePricingTemplateOptions {
+  locale?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface UsePricingTemplateResult {
+  plans: Plan[];
+  template?: PricingTemplateSummary;
+  groups: PricingTemplateFeatureGroup[];
+  loading: boolean;
+  error: Error | null;
+  config: ConfigDiagnostic;
+  locale?: string;
+}
+
+/** Fetch a pricing presentation template resolved against live published plans. */
+export function usePricingTemplate(
+  key: string,
+  options: UsePricingTemplateOptions = {},
+): UsePricingTemplateResult {
+  const { client, config, locale: ctxLocale } = useMonetizeKit();
+  const templateKey = key.trim();
+  const effectiveLocale = options.locale ?? ctxLocale;
+  const missingKey = templateKey.length === 0;
+  const configError = config.severity === "error";
+  const [state, setState] = useState<AsyncState<PlansResponse>>({
+    data: null,
+    loading: !missingKey && !configError,
+    error: null,
+  });
+
+  useEffect(() => {
+    if (missingKey) {
+      setState({
+        data: null,
+        loading: false,
+        error: new Error("pricing template key is required"),
+      });
+      return;
+    }
+    if (configError) {
+      setState({ data: null, loading: false, error: new Error(config.title) });
+      return;
+    }
+
+    let active = true;
+    setState((prev) => ({ ...prev, loading: true, error: null }));
+    client
+      .listPlans<PlansResponse>({
+        template: templateKey,
+        locale: effectiveLocale,
+        page: options.page,
+        pageSize: options.pageSize,
+      })
+      .then((res) => {
+        if (active) setState({ data: res, loading: false, error: null });
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          setState({
+            data: null,
+            loading: false,
+            error: error instanceof Error ? error : new Error(String(error)),
+          });
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [
+    client,
+    templateKey,
+    effectiveLocale,
+    options.page,
+    options.pageSize,
+    missingKey,
+    configError,
+    config.title,
+  ]);
+
+  return useMemo(
+    () => ({
+      plans: state.data?.data ?? [],
+      template: state.data?.template,
+      groups: state.data?.groups ?? [],
+      loading: missingKey || configError ? false : state.loading,
+      error: state.error,
+      config,
+      locale: effectiveLocale,
+    }),
+    [config, configError, effectiveLocale, missingKey, state],
+  );
 }
 
 /** Resolve a single feature entitlement for the provider's customer. */
