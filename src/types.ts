@@ -43,6 +43,8 @@ export interface Plan {
   tags?: string[];
   entitlements?: PlanEntitlement[];
   pricing?: PricingTerm[];
+  /** Free-trial length in days; `null`/absent means no trial CTA is shown. */
+  trialDays?: number | null;
 }
 
 export interface PricingTemplateSection {
