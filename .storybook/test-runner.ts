@@ -20,10 +20,12 @@ const config: TestRunnerConfig = {
     }
     await configureAxe(page, {
       rules: [
-        // FOLLOW-UP: color-contrast is temporarily disabled — meeting WCAG AA
-        // contrast across all 8 brand themes × light/dark is a design-token
-        // pass tracked separately. Structural a11y (names, roles, ARIA) is
-        // still enforced. Re-enable once the token contrast audit lands.
+        // color-contrast stays disabled: enabling it fails 15/30 stories with
+        // serious WCAG AA violations on the *default* theme alone (verified via
+        // the test-runner), and MonetizeKit ships 8 brand themes × light/dark.
+        // Meeting AA across every token set is a dedicated design-token audit,
+        // not an SDK change — tracked separately. Structural a11y (names,
+        // roles, ARIA) is enforced here; re-enable once the token audit lands.
         { id: "color-contrast", enabled: false },
         ...(storyContext.parameters?.a11y?.config?.rules ?? []),
       ],
