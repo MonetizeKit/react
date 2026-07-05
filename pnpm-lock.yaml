@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      '@monetizekit/types':
+        specifier: ^0.1.0
+        version: 0.1.0
     devDependencies:
       '@changesets/cli':
         specifier: ^2.27.0
@@ -913,6 +917,9 @@ packages:
     peerDependencies:
       '@types/react': '>=16'
       react: '>=16'
+
+  '@monetizekit/types@0.1.0':
+    resolution: {integrity: sha512-U2Brn5e1daIlOOFB+PGDuPjH4iTVldIQNR/eI/Ruuc5rnraYrpoI0rgvGJ309tb/FNxzP44jYSG69njzU34JJg==}
 
   '@napi-rs/wasm-runtime@1.1.6':
     resolution: {integrity: sha512-ZLv/JdUfkvOy9eCnnBaGfiO+XimbjebAeO+MRQqD/B+FR1tnRN0tpKSJHRbE8sFfS6aqsXZ67TQjfwfsxULVbg==}
@@ -5176,6 +5183,8 @@ snapshots:
       '@types/mdx': 2.0.14
       '@types/react': 19.2.17
       react: 19.2.7
+
+  '@monetizekit/types@0.1.0': {}
 
   '@napi-rs/wasm-runtime@1.1.6(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)':
     dependencies:

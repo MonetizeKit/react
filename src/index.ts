@@ -125,6 +125,7 @@ export type {
   PricingTerm,
   PricingTier,
   EntitlementResult,
+  EntitlementCheck,
   UsageResult,
   CreditBalance,
   TeamMember,

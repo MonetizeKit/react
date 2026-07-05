@@ -5,7 +5,7 @@ import { sortPlansForDisplay } from "./lib/format";
 import type { ConfigDiagnostic } from "./lib/config-diagnostics";
 import type {
   CreditBalance,
-  EntitlementResult,
+  EntitlementCheck,
   Plan,
   PricingTemplateFeatureGroup,
   PricingTemplatePlansResponse,
@@ -277,10 +277,10 @@ export function usePricingTemplate(
 /** Resolve a single feature entitlement for the provider's customer. */
 export function useEntitlement(featureKey: string) {
   const { client, customerId } = useMonetizeKit();
-  const state = useAsync<EntitlementResult>(
+  const state = useAsync<EntitlementCheck>(
     () =>
       customerId
-        ? client.getEntitlement<EntitlementResult>(customerId, featureKey)
+        ? client.getEntitlement<EntitlementCheck>(customerId, featureKey)
         : null,
     [client, customerId, featureKey],
   );

@@ -43,6 +43,9 @@
     "changeset": "changeset",
     "release": "changeset publish"
   },
+  "dependencies": {
+    "@monetizekit/types": "^0.1.0"
+  },
   "peerDependencies": {
     "react": ">=18",
     "react-dom": ">=18"
