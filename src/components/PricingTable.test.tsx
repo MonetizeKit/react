@@ -90,6 +90,60 @@ describe("PricingTable", () => {
     expect(document.querySelector(".custom-grid")).toBeInTheDocument();
   });
 
+  it("marks the current plan with a disabled CTA + badge and ignores clicks", () => {
+    const onSelectPlan = vi.fn();
+    renderTable({ currentPlanId: "plan_scale", onSelectPlan });
+    const cta = screen.getByRole("button", { name: "Current plan" });
+    expect(cta).toBeDisabled();
+    fireEvent.click(cta);
+    expect(onSelectPlan).not.toHaveBeenCalled();
+    expect(document.querySelector('[data-mk-plan="Scale"]')).toHaveAttribute("data-mk-current", "true");
+  });
+
+  it("labels cheaper plans as downgrade relative to the current plan", () => {
+    renderTable({ currentPlanId: "plan_scale" });
+    expect(document.querySelector('[data-mk-plan="Free"]')).toHaveAttribute(
+      "data-mk-relationship",
+      "downgrade",
+    );
+    expect(screen.getByRole("button", { name: "Downgrade" })).toBeInTheDocument();
+  });
+
+  it("labels pricier plans as upgrade when on a cheaper current plan", () => {
+    renderTable({ currentPlanId: "plan_free", upgradeLabel: "Upgrade now" });
+    expect(document.querySelector('[data-mk-plan="Scale"]')).toHaveAttribute(
+      "data-mk-relationship",
+      "upgrade",
+    );
+    expect(screen.getByRole("button", { name: "Upgrade now" })).toBeInTheDocument();
+  });
+
+  it("renders a trial CTA + caption for a trial plan, and suppresses it on the current plan", () => {
+    const trialPlans: Plan[] = [
+      {
+        id: "plan_pro",
+        name: "Pro",
+        trialDays: 14,
+        pricing: [{ type: "flat", amount: 49, currency: "USD", interval: "monthly" }],
+      },
+    ];
+    const { rerender } = render(
+      <MonetizeKitProvider publishableKey="pk_test" baseUrl="https://app.example.com">
+        <PricingTable plans={trialPlans} />
+      </MonetizeKitProvider>,
+    );
+    expect(screen.getByRole("button", { name: "Start 14-day trial" })).toBeInTheDocument();
+    expect(screen.getByText("14-day free trial")).toBeInTheDocument();
+
+    rerender(
+      <MonetizeKitProvider publishableKey="pk_test" baseUrl="https://app.example.com">
+        <PricingTable plans={trialPlans} currentPlanId="plan_pro" />
+      </MonetizeKitProvider>,
+    );
+    expect(screen.queryByText("14-day free trial")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Current plan" })).toBeDisabled();
+  });
+
   it("fetches and renders templated plans when the template prop is provided", async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,

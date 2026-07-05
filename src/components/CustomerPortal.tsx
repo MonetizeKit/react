@@ -5,14 +5,23 @@ import { tokensToStyle } from "../theme/tokens";
 import { formatMoney, formatUnits } from "../lib/format";
 import { UsageBanner } from "./UsageBanner";
 import { SampleNotice } from "./SampleNotice";
+import { Checkout, type CheckoutResult, type CheckoutSummary } from "./Checkout";
 import {
   SAMPLE_CREDITS,
   SAMPLE_INVOICES,
+  SAMPLE_PAYMENT_METHOD,
   SAMPLE_PORTAL,
   SAMPLE_TEAM,
   SAMPLE_USAGE,
 } from "../lib/sample-data";
-import type { Invoice, TeamMember } from "../types";
+import type { Invoice, PaymentMethodSummary, TeamMember } from "../types";
+
+/** Stripe config for hosting an inline Checkout inside the portal. */
+export interface PortalCheckoutConfig {
+  stripePublishableKey: string;
+  clientSecret: string;
+  returnUrl?: string;
+}
 
 type Interval = "monthly" | "annually" | "one_time";
 
@@ -42,6 +51,28 @@ export interface CustomerPortalProps {
   onUpgrade?: () => void;
   onCancel?: () => void;
   onViewInvoices?: () => void;
+  /**
+   * When provided, the plan-change button reveals an inline Checkout (Stripe
+   * Elements) using this config instead of calling `onUpgrade`. Create the
+   * PaymentIntent/Subscription client secret on your backend.
+   */
+  changePlanCheckout?: PortalCheckoutConfig & { summary?: CheckoutSummary };
+  /** Called when the inline plan-change Checkout confirms successfully. */
+  onPlanChanged?: (result: CheckoutResult) => void;
+  /** The customer's current card on file, shown in the Payment section. */
+  paymentMethod?: PaymentMethodSummary;
+  /** Force-show the Payment section. Defaults to on when a card or sample data is present. */
+  showPaymentMethod?: boolean;
+  /** Callback for the "Update payment method" button (used when no inline config is given). */
+  onUpdatePaymentMethod?: () => void;
+  /**
+   * When provided, the "Update payment method" button reveals an inline
+   * Checkout in `setup` mode using this config (create a SetupIntent secret on
+   * your backend) instead of calling `onUpdatePaymentMethod`.
+   */
+  updatePaymentMethod?: PortalCheckoutConfig;
+  /** Called when the inline payment-method Checkout confirms successfully. */
+  onPaymentMethodUpdated?: (result: CheckoutResult) => void;
   /**
    * Render illustrative sample plan/usage/credit/team/invoice data behind a clear
    * disclaimer. Use for previews or a fresh workspace with no plans/products yet.
@@ -143,7 +174,7 @@ function SampleUsageRow({ label, current, limit, locale }: { label: string; curr
   );
 }
 
-type SectionId = "plan" | "usage" | "credits" | "team" | "invoices";
+type SectionId = "plan" | "payment" | "usage" | "credits" | "team" | "invoices";
 
 /** A self-service portal: plan, usage, credits, team, and invoices. */
 export function CustomerPortal({
@@ -163,6 +194,13 @@ export function CustomerPortal({
   onUpgrade,
   onCancel,
   onViewInvoices,
+  changePlanCheckout,
+  onPlanChanged,
+  paymentMethod,
+  showPaymentMethod,
+  onUpdatePaymentMethod,
+  updatePaymentMethod,
+  onPaymentMethodUpdated,
   sample = false,
   disclaimer,
   showBranding = false,
@@ -174,6 +212,8 @@ export function CustomerPortal({
   const locale = localeProp ?? ctxLocale;
   const currency = currencyProp ?? ctxCurrency;
   const credits = useCredits();
+  const [changingPlan, setChangingPlan] = useState(false);
+  const [updatingPaymentMethod, setUpdatingPaymentMethod] = useState(false);
 
   const resolvedPlanName = planName ?? (sample ? SAMPLE_PORTAL.planName : "Current plan");
   const resolvedPrice = price ?? (sample ? SAMPLE_PORTAL.price : undefined);
@@ -188,7 +228,11 @@ export function CustomerPortal({
   const resolvedSeats = seats ?? (sample ? { used: SAMPLE_TEAM.seats, max: SAMPLE_TEAM.maxSeats } : undefined);
   const invoicesEnabled = showInvoices ?? sample;
   const resolvedInvoices = invoices ?? (sample ? SAMPLE_INVOICES : []);
-  const upgradeEnabled = allowUpgrade || sample;
+  const upgradeEnabled = allowUpgrade || sample || Boolean(changePlanCheckout);
+
+  const resolvedPaymentMethod = paymentMethod ?? (sample ? SAMPLE_PAYMENT_METHOD : undefined);
+  const paymentEnabled =
+    showPaymentMethod ?? (Boolean(resolvedPaymentMethod) || Boolean(updatePaymentMethod) || sample);
 
   const planSection = (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -220,14 +264,42 @@ export function CustomerPortal({
           </button>
         ) : null}
         {upgradeEnabled ? (
-          <button type="button" style={actionButton("primary")} onClick={onUpgrade}>
-            Upgrade plan
+          <button
+            type="button"
+            style={actionButton("primary")}
+            onClick={changePlanCheckout ? () => setChangingPlan((v) => !v) : onUpgrade}
+            aria-expanded={changePlanCheckout ? changingPlan : undefined}
+          >
+            {changePlanCheckout ? "Change plan" : "Upgrade plan"}
           </button>
         ) : null}
         <button type="button" style={actionButton("outline")} onClick={onManageBilling}>
           Manage billing
         </button>
       </div>
+
+      {changePlanCheckout && changingPlan ? (
+        <div data-mk-part="change-plan">
+          <Checkout
+            stripePublishableKey={changePlanCheckout.stripePublishableKey}
+            clientSecret={changePlanCheckout.clientSecret}
+            returnUrl={changePlanCheckout.returnUrl}
+            summary={changePlanCheckout.summary}
+            submitLabel="Confirm plan change"
+            onSuccess={(result) => {
+              setChangingPlan(false);
+              onPlanChanged?.(result);
+            }}
+          />
+          <button
+            type="button"
+            style={{ ...actionButton("ghost"), alignSelf: "flex-start", marginTop: "0.5rem" }}
+            onClick={() => setChangingPlan(false)}
+          >
+            Cancel
+          </button>
+        </div>
+      ) : null}
 
       {allowCancel ? (
         <button type="button" style={{ ...actionButton("ghost"), alignSelf: "flex-start" }} onClick={onCancel}>
@@ -259,6 +331,55 @@ export function CustomerPortal({
             return <SampleUsageRow key={meterId} label={meterId} current={usage.current} limit={usage.limit} locale={locale} />;
           })
         : resolvedMeterIds.map((meterId) => <UsageBanner key={meterId} meterId={meterId} label={meterId} locale={locale} />)}
+    </div>
+  ) : null;
+
+  const paymentSection = paymentEnabled ? (
+    <div style={cardStyle}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>Payment method</span>
+        <button
+          type="button"
+          style={actionButton("outline")}
+          onClick={
+            updatePaymentMethod ? () => setUpdatingPaymentMethod((v) => !v) : onUpdatePaymentMethod
+          }
+          aria-expanded={updatePaymentMethod ? updatingPaymentMethod : undefined}
+        >
+          {resolvedPaymentMethod ? "Update" : "Add card"}
+        </button>
+      </div>
+      {resolvedPaymentMethod ? (
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem" }}>
+          <span style={{ fontWeight: 600, textTransform: "capitalize" }}>
+            {resolvedPaymentMethod.brand}
+          </span>
+          <span style={{ color: "var(--mk-muted)" }}>•••• {resolvedPaymentMethod.last4}</span>
+          {resolvedPaymentMethod.expMonth && resolvedPaymentMethod.expYear ? (
+            <span style={{ color: "var(--mk-muted)", marginLeft: "auto", fontSize: "0.75rem" }}>
+              Exp {String(resolvedPaymentMethod.expMonth).padStart(2, "0")}/
+              {String(resolvedPaymentMethod.expYear).slice(-2)}
+            </span>
+          ) : null}
+        </div>
+      ) : (
+        <span style={{ color: "var(--mk-muted)", fontSize: "0.8125rem" }}>No card on file.</span>
+      )}
+      {updatePaymentMethod && updatingPaymentMethod ? (
+        <div data-mk-part="update-payment-method" style={{ marginTop: "0.5rem" }}>
+          <Checkout
+            mode="setup"
+            stripePublishableKey={updatePaymentMethod.stripePublishableKey}
+            clientSecret={updatePaymentMethod.clientSecret}
+            returnUrl={updatePaymentMethod.returnUrl}
+            submitLabel="Save payment method"
+            onSuccess={(result) => {
+              setUpdatingPaymentMethod(false);
+              onPaymentMethodUpdated?.(result);
+            }}
+          />
+        </div>
+      ) : null}
     </div>
   ) : null;
 
@@ -324,6 +445,7 @@ export function CustomerPortal({
 
   const sections: { id: SectionId; label: string; node: ReactNode }[] = [
     { id: "plan", label: "Plan", node: planSection },
+    ...(paymentSection ? [{ id: "payment" as const, label: "Payment", node: paymentSection }] : []),
     ...(usageSection ? [{ id: "usage" as const, label: "Usage", node: usageSection }] : []),
     ...(creditsSection ? [{ id: "credits" as const, label: "Credits", node: creditsSection }] : []),
     ...(teamSection ? [{ id: "team" as const, label: "Team", node: teamSection }] : []),

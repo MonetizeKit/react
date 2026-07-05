@@ -2,7 +2,7 @@ import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { useMonetizeKit } from "../provider";
 import { usePlans } from "../hooks";
 import { tokensToStyle } from "../theme/tokens";
-import { describePlanPrice, annualSavingsPercent, type PriceDisplay } from "../lib/format";
+import { describePlanPrice, annualSavingsPercent, planSortValue, type PriceDisplay } from "../lib/format";
 import { includedFeatures, type FeatureRow } from "../lib/pricing";
 import { SampleNotice } from "./SampleNotice";
 import { ConfigNotice } from "./ConfigNotice";
@@ -31,6 +31,15 @@ export interface PricingTableClassNames {
   check?: string;
 }
 
+/**
+ * How a plan card relates to the customer's active plan:
+ *  - `current`: the plan the customer is on (CTA disabled)
+ *  - `upgrade`: a higher-priced plan than the current one
+ *  - `downgrade`: a lower-priced plan than the current one
+ *  - `none`: no current-plan context (anonymous / not provided)
+ */
+export type PlanRelationship = "current" | "upgrade" | "downgrade" | "none";
+
 export interface PricingPlanCardRenderContext {
   price: PriceDisplay;
   highlighted: boolean;
@@ -39,6 +48,14 @@ export interface PricingPlanCardRenderContext {
   locale?: string;
   ctaLabel: string;
   contactSalesLabel: string;
+  /** This plan's relationship to the customer's current plan. */
+  relationship: PlanRelationship;
+  /** `true` when this is the customer's current plan. */
+  isCurrent: boolean;
+  /** Free-trial length offered by this plan, if any. */
+  trialDays: number | null;
+  /** Whether the primary CTA should render as disabled (e.g. current plan). */
+  ctaDisabled: boolean;
   selectPlan: () => void;
   contactSales: () => void;
   primaryAction: () => void;
@@ -53,6 +70,24 @@ export interface PricingTableProps {
   template?: string;
   /** Plan name to highlight as "Most Popular". */
   highlightPlan?: string;
+  /**
+   * The customer's current plan id. Enables current-plan / upgrade / downgrade
+   * awareness: the matching card shows a disabled "Current plan" CTA, cheaper
+   * plans show a downgrade CTA, pricier plans an upgrade CTA.
+   */
+  currentPlanId?: string;
+  /** CTA/badge text for the customer's current plan. Defaults to "Current plan". */
+  currentPlanLabel?: string;
+  /** CTA label for higher-tier plans when a current plan is known. Defaults to `ctaLabel`. */
+  upgradeLabel?: string;
+  /** CTA label for lower-tier plans. Defaults to "Downgrade". */
+  downgradeLabel?: string;
+  /**
+   * CTA label template for plans offering a free trial (only shown for
+   * upgrades / when no current plan). `{days}` is replaced with the trial
+   * length. Defaults to "Start {days}-day trial".
+   */
+  trialLabel?: string;
   /** Active billing cycle (controlled). With `showBillingToggle`, also the initial value. */
   billingCycle?: "monthly" | "annually";
   /** Render an interactive Monthly/Yearly toggle above the cards. */
@@ -102,6 +137,9 @@ const PRICING_TABLE_CSS = `
 .mk-pt-card[data-mk-highlighted="true"]{border-color:var(--mk-primary);border-width:2px;box-shadow:0 16px 40px color-mix(in srgb,var(--mk-primary) 22%,transparent)}
 @media(min-width:1024px){.mk-pt-card[data-mk-highlighted="true"]{transform:translateY(-8px)}.mk-pt-card[data-mk-highlighted="true"]:hover{transform:translateY(-10px)}}
 .mk-pt-badge{position:absolute;top:0;left:50%;transform:translate(-50%,-50%);background:var(--mk-primary);color:var(--mk-primary-fg);border-radius:999px;padding:.25rem .85rem;font-size:.75rem;font-weight:600;letter-spacing:.02em;white-space:nowrap;box-shadow:var(--mk-shadow)}
+.mk-pt-badge--current{background:var(--mk-success,var(--mk-accent));color:var(--mk-primary-fg)}
+.mk-pt-card[data-mk-current="true"]{border-color:var(--mk-success,var(--mk-accent))}
+.mk-pt-trial{font-size:.8125rem;font-weight:600;color:var(--mk-accent);margin-top:-.25rem}
 .mk-pt-name{margin:0;font-size:1.25rem;font-weight:700;line-height:1.2}
 .mk-pt-desc{margin:0;color:var(--mk-muted);font-size:.875rem;line-height:1.45;min-height:2.5em}
 .mk-pt-price{display:flex;align-items:baseline;gap:.4rem;flex-wrap:wrap}
@@ -112,6 +150,9 @@ const PRICING_TABLE_CSS = `
 .mk-pt-cta--primary{background:var(--mk-primary);color:var(--mk-primary-fg)}
 .mk-pt-cta--ghost{background:color-mix(in srgb,var(--mk-fg) 8%,transparent);color:var(--mk-fg)}
 .mk-pt-cta--ghost:hover{background:color-mix(in srgb,var(--mk-fg) 14%,transparent);filter:none}
+.mk-pt-cta--current{background:transparent;color:var(--mk-muted);border-color:var(--mk-border);cursor:default}
+.mk-pt-cta--current:hover{filter:none}
+.mk-pt-cta:disabled{cursor:default;opacity:.85}
 .mk-pt-flabel{font-size:.8125rem;font-weight:600;color:var(--mk-fg);margin:.25rem 0 -.25rem}
 .mk-pt-features{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.6rem}
 .mk-pt-feature{display:flex;align-items:flex-start;gap:.55rem;font-size:.875rem;line-height:1.4;color:var(--mk-card-fg)}
@@ -139,6 +180,11 @@ export function PricingTable({
   plans: plansProp,
   template: templateKey,
   highlightPlan,
+  currentPlanId,
+  currentPlanLabel = "Current plan",
+  upgradeLabel,
+  downgradeLabel = "Downgrade",
+  trialLabel = "Start {days}-day trial",
   billingCycle,
   showBillingToggle = false,
   locale,
@@ -197,6 +243,11 @@ export function PricingTable({
               cycle={cycle}
               locale={effectiveLocale}
               highlightPlan={highlightPlan}
+              currentPlanId={currentPlanId}
+              currentPlanLabel={currentPlanLabel}
+              upgradeLabel={upgradeLabel}
+              downgradeLabel={downgradeLabel}
+              trialLabel={trialLabel}
               maxFeatures={maxFeatures}
               ctaLabel={effectiveCtaLabel}
               contactSalesLabel={contactSalesLabel}
@@ -247,6 +298,11 @@ export function PricingTable({
         cycle={cycle}
         locale={effectiveLocale}
         highlightPlan={highlightPlan}
+        currentPlanId={currentPlanId}
+        currentPlanLabel={currentPlanLabel}
+        upgradeLabel={upgradeLabel}
+        downgradeLabel={downgradeLabel}
+        trialLabel={trialLabel}
         maxFeatures={maxFeatures}
         ctaLabel={effectiveCtaLabel}
         contactSalesLabel={contactSalesLabel}
@@ -266,6 +322,11 @@ function PricingGrid({
   cycle,
   locale,
   highlightPlan,
+  currentPlanId,
+  currentPlanLabel,
+  upgradeLabel,
+  downgradeLabel,
+  trialLabel,
   maxFeatures,
   ctaLabel,
   contactSalesLabel,
@@ -280,6 +341,11 @@ function PricingGrid({
   cycle: "monthly" | "annually";
   locale?: string;
   highlightPlan?: string;
+  currentPlanId?: string;
+  currentPlanLabel: string;
+  upgradeLabel?: string;
+  downgradeLabel: string;
+  trialLabel: string;
   maxFeatures: number;
   ctaLabel: string;
   contactSalesLabel: string;
@@ -292,6 +358,8 @@ function PricingGrid({
 }) {
   // Cap desktop columns so many plans still wrap into balanced rows.
   const cols = Math.min(plans.length, 4);
+  const currentPlan = currentPlanId ? plans.find((p) => p.id === currentPlanId) : undefined;
+  const currentRank = currentPlan ? planSortValue(currentPlan) : null;
   return (
     <div
       className={cx("mk-pt-grid", classNames?.grid)}
@@ -302,8 +370,48 @@ function PricingGrid({
         const highlighted =
           highlightPlan != null && plan.name.toLowerCase() === highlightPlan.toLowerCase();
         const features = includedFeatures(plan, locale, maxFeatures);
+
+        const isCurrent = currentPlanId != null && plan.id === currentPlanId;
+        let relationship: PlanRelationship = "none";
+        if (isCurrent) {
+          relationship = "current";
+        } else if (currentRank != null) {
+          const rank = planSortValue(plan);
+          relationship = rank > currentRank ? "upgrade" : rank < currentRank ? "downgrade" : "none";
+        }
+        const trialDays = plan.trialDays ?? null;
+        // A trial CTA only makes sense for a net-new/upgrade purchase.
+        const trialApplies =
+          trialDays != null &&
+          trialDays > 0 &&
+          !isCurrent &&
+          relationship !== "downgrade" &&
+          !price.contactSales;
+
         const selectPlan = () => onSelectPlan?.(plan.id);
         const contactSales = () => onContactSales?.(plan.id);
+        const ctaDisabled = relationship === "current";
+        const primaryAction = ctaDisabled
+          ? () => {}
+          : price.contactSales
+            ? contactSales
+            : selectPlan;
+
+        let ctaText: string;
+        if (price.contactSales) {
+          ctaText = contactSalesLabel;
+        } else if (relationship === "current") {
+          ctaText = currentPlanLabel;
+        } else if (relationship === "downgrade") {
+          ctaText = downgradeLabel;
+        } else if (trialApplies) {
+          ctaText = trialLabel.replace("{days}", String(trialDays));
+        } else if (relationship === "upgrade") {
+          ctaText = upgradeLabel ?? ctaLabel;
+        } else {
+          ctaText = ctaLabel;
+        }
+
         const ctx: PricingPlanCardRenderContext = {
           price,
           highlighted,
@@ -312,9 +420,13 @@ function PricingGrid({
           locale,
           ctaLabel,
           contactSalesLabel,
+          relationship,
+          isCurrent,
+          trialDays,
+          ctaDisabled,
           selectPlan,
           contactSales,
-          primaryAction: price.contactSales ? contactSales : selectPlan,
+          primaryAction,
           config,
           classNames,
         };
@@ -324,11 +436,21 @@ function PricingGrid({
         return (
           <div
             key={plan.id}
-            className={cx("mk-pt-card", classNames?.card, highlighted && classNames?.highlightedCard)}
+            className={cx(
+              "mk-pt-card",
+              classNames?.card,
+              highlighted && classNames?.highlightedCard,
+            )}
             data-mk-plan={plan.name}
             data-mk-highlighted={highlighted ? "true" : undefined}
+            data-mk-current={isCurrent ? "true" : undefined}
+            data-mk-relationship={relationship !== "none" ? relationship : undefined}
           >
-            {highlighted ? (
+            {isCurrent ? (
+              <span className={cx("mk-pt-badge", "mk-pt-badge--current", classNames?.badge)}>
+                {currentPlanLabel}
+              </span>
+            ) : highlighted ? (
               renderBadge ? (
                 renderBadge(plan, ctx)
               ) : (
@@ -347,17 +469,27 @@ function PricingGrid({
                 <span className={cx("mk-pt-caption", classNames?.caption)}>{price.caption}</span>
               ) : null}
             </div>
+            {trialApplies ? (
+              <span className="mk-pt-trial">{trialDays}-day free trial</span>
+            ) : null}
             <button
               type="button"
               className={cx(
                 "mk-pt-cta",
-                highlighted ? "mk-pt-cta--primary" : "mk-pt-cta--ghost",
+                ctaDisabled
+                  ? "mk-pt-cta--current"
+                  : highlighted && relationship !== "downgrade"
+                    ? "mk-pt-cta--primary"
+                    : "mk-pt-cta--ghost",
                 classNames?.cta,
                 highlighted ? classNames?.primaryCta : classNames?.ghostCta,
               )}
               onClick={ctx.primaryAction}
+              disabled={ctaDisabled}
+              aria-disabled={ctaDisabled ? "true" : undefined}
+              aria-current={isCurrent ? "true" : undefined}
             >
-              {price.contactSales ? contactSalesLabel : ctaLabel}
+              {ctaText}
             </button>
             {features.length > 0 ? (
               <>

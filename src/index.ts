@@ -23,7 +23,16 @@ export {
   type PricingTableProps,
   type PricingPlanCardRenderContext,
   type PricingTableClassNames,
+  type PlanRelationship,
 } from "./components/PricingTable";
+export {
+  Checkout,
+  type CheckoutProps,
+  type CheckoutClassNames,
+  type CheckoutSummary,
+  type CheckoutSummaryLine,
+  type CheckoutResult,
+} from "./components/Checkout";
 export {
   PricingComparison,
   type PricingComparisonProps,
@@ -44,6 +53,7 @@ export {
 export {
   CustomerPortal,
   type CustomerPortalProps,
+  type PortalCheckoutConfig,
 } from "./components/CustomerPortal";
 export {
   EntitlementGate,
@@ -125,6 +135,7 @@ export type {
   PricingTerm,
   PricingTier,
   EntitlementResult,
+  EntitlementCheck,
   UsageResult,
   CreditBalance,
   TeamMember,

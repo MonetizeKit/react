@@ -1,7 +1,14 @@
 /**
- * Public types for @monetizekit/react. Kept self-contained so the package has
- * no cross-repo dependency; mirrors the canonical catalog/pricing contract.
+ * Public types for @monetizekit/react.
+ *
+ * Shared API contracts are sourced from `@monetizekit/types` (the canonical
+ * package) so shapes cannot drift — e.g. `EntitlementResult` is re-exported
+ * from there rather than redefined here. React-only view models (the
+ * `useEntitlement` check result, credit display balance) live below.
  */
+
+// Canonical resolution shape — single source of truth in @monetizekit/types.
+export type { EntitlementResult } from "@monetizekit/types";
 
 export interface PricingTier {
   /** Absolute quantity upper bound; `null` = open-ended ("and above"). */
@@ -36,6 +43,8 @@ export interface Plan {
   tags?: string[];
   entitlements?: PlanEntitlement[];
   pricing?: PricingTerm[];
+  /** Free-trial length in days; `null`/absent means no trial CTA is shown. */
+  trialDays?: number | null;
 }
 
 export interface PricingTemplateSection {
@@ -87,7 +96,13 @@ export interface PricingTemplatePlansResponse<TPlan extends Plan = Plan> {
   groups?: PricingTemplateFeatureGroup[];
 }
 
-export interface EntitlementResult {
+/**
+ * Result of a single-feature entitlement check (`GET /entitlements/{id}/{key}`).
+ * React-specific view of the check endpoint: `allowed` plus the effective
+ * value. For the full resolution breakdown use the canonical
+ * `EntitlementResult` from `@monetizekit/types`.
+ */
+export interface EntitlementCheck {
   featureKey: string;
   value: string | number | boolean | null;
   allowed: boolean;
@@ -109,6 +124,16 @@ export interface TeamMember {
   email: string;
   role: string;
   avatarUrl?: string;
+}
+
+/** A card on file, as shown in the CustomerPortal payment section. */
+export interface PaymentMethodSummary {
+  /** Card brand, e.g. "visa", "mastercard", "amex". */
+  brand: string;
+  /** Last four digits of the card. */
+  last4: string;
+  expMonth?: number;
+  expYear?: number;
 }
 
 export interface Invoice {
