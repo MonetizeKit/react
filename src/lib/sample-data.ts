@@ -4,7 +4,7 @@
  * plans or products defined). Always paired with a visible <SampleNotice/> so it
  * is never mistaken for live data.
  */
-import type { CreditBalance, Invoice, Plan, TeamMember, UsageResult } from "../types";
+import type { CreditBalance, Invoice, PaymentMethodSummary, Plan, TeamMember, UsageResult } from "../types";
 
 export const SAMPLE_PLANS: Plan[] = [
   {
@@ -76,6 +76,13 @@ export const SAMPLE_USAGE: Record<string, UsageResult> = {
 };
 
 export const SAMPLE_CREDITS: CreditBalance = { balance: 1200, currency: "USD" };
+
+export const SAMPLE_PAYMENT_METHOD: PaymentMethodSummary = {
+  brand: "visa",
+  last4: "4242",
+  expMonth: 12,
+  expYear: 2028,
+};
 
 export const SAMPLE_TEAM: { members: TeamMember[]; seats: number; maxSeats: number } = {
   members: [

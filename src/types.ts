@@ -126,6 +126,16 @@ export interface TeamMember {
   avatarUrl?: string;
 }
 
+/** A card on file, as shown in the CustomerPortal payment section. */
+export interface PaymentMethodSummary {
+  /** Card brand, e.g. "visa", "mastercard", "amex". */
+  brand: string;
+  /** Last four digits of the card. */
+  last4: string;
+  expMonth?: number;
+  expYear?: number;
+}
+
 export interface Invoice {
   id: string;
   /** ISO date string. */

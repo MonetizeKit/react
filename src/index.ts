@@ -53,6 +53,7 @@ export {
 export {
   CustomerPortal,
   type CustomerPortalProps,
+  type PortalCheckoutConfig,
 } from "./components/CustomerPortal";
 export {
   EntitlementGate,
