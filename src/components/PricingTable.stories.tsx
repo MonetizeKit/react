@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { within, userEvent, expect, fn } from "@storybook/test";
 import { PricingTable } from "./PricingTable";
 import { MonetizeKitProvider } from "../provider";
 import type { Plan } from "../types";
@@ -74,15 +75,64 @@ const plans: Plan[] = [
 const meta: Meta<typeof PricingTable> = {
   title: "Components/PricingTable",
   component: PricingTable,
-  args: { plans, highlightPlan: "Pro" },
+  args: { plans, highlightPlan: "Pro", onSelectPlan: fn() },
 };
 export default meta;
 
 type Story = StoryObj<typeof PricingTable>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  play: async ({ canvasElement, args }) => {
+    const selectSpy = args.onSelectPlan;
+    // The highlighted (Pro) card's CTA selects that plan.
+    const proCard = canvasElement.querySelector('[data-mk-plan="Pro"]');
+    const cta = within(proCard as HTMLElement).getByRole("button");
+    await userEvent.click(cta);
+    if (typeof selectSpy === "function") {
+      await expect(selectSpy).toHaveBeenCalledWith("plan_pro");
+    }
+  },
+};
 
 export const WithBillingToggle: Story = { args: { showBillingToggle: true } };
+
+/**
+ * Current-plan awareness: the customer is on Pro, so its card shows a disabled
+ * "Current plan" CTA, cheaper plans a "Downgrade" CTA, pricier ones "Upgrade".
+ */
+export const CurrentPlan: Story = {
+  args: { currentPlanId: "plan_pro", upgradeLabel: "Upgrade" },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const current = canvas.getByRole("button", { name: "Current plan" });
+    await expect(current).toBeDisabled();
+    await expect(canvas.getByRole("button", { name: "Downgrade" })).toBeInTheDocument();
+  },
+};
+
+/** Trial awareness: plans with a free trial surface a "Start N-day trial" CTA. */
+export const WithTrial: Story = {
+  args: {
+    highlightPlan: "Pro",
+    plans: [
+      {
+        id: "plan_free",
+        name: "Free",
+        pricing: [{ type: "flat", amount: 0, currency: "USD", interval: "monthly" }],
+      },
+      {
+        id: "plan_pro",
+        name: "Pro",
+        trialDays: 14,
+        pricing: [{ type: "flat", amount: 499, currency: "USD", interval: "monthly" }],
+      },
+    ] satisfies Plan[],
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole("button", { name: "Start 14-day trial" })).toBeInTheDocument();
+  },
+};
 
 /** Empty catalog → illustrative sample plans behind a clear disclaimer. */
 export const SampleWhenEmpty: Story = { args: { plans: [], highlightPlan: "Growth" } };
