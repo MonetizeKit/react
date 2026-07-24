@@ -4,8 +4,10 @@ import {
   resolveTokens,
   tokensToStyle,
   THEME_NAMES,
+  PALETTE_NAMES,
   type ThemeName,
   type ThemeMode,
+  type PaletteName,
 } from "../src/theme/tokens";
 
 const storybookEnv = (import.meta as ImportMeta & {
@@ -54,6 +56,16 @@ const preview: Preview = {
         dynamicTitle: true,
       },
     },
+    palette: {
+      description: "Semantic palette (brand theme only)",
+      defaultValue: "default",
+      toolbar: {
+        title: "Palette",
+        icon: "swatchbook",
+        items: PALETTE_NAMES.map((p) => ({ value: p, title: p })),
+        dynamicTitle: true,
+      },
+    },
     locale: {
       description: "Locale (i18n)",
       defaultValue: "en-US",
@@ -83,12 +95,14 @@ const preview: Preview = {
     (Story, context) => {
       const theme = (context.globals.theme as ThemeName) ?? "default";
       const mode = (context.globals.mode as ThemeMode) ?? "light";
+      const palette = (context.globals.palette as PaletteName) ?? "default";
       const locale = (context.globals.locale as string) ?? "en-US";
       const currency = (context.globals.currency as string) ?? "USD";
       const publishableKey =
         (context.globals.publishableKey as string | undefined) ??
         STORYBOOK_MONETIZEKIT_PUBLISHABLE_KEY;
-      const appearance = { theme, mode };
+      // The palette axis only applies to the brand theme; hand-tuned themes ignore it.
+      const appearance = theme === "brand" ? { theme, mode, palette } : { theme, mode };
       const prefersDark =
         typeof window !== "undefined" && window.matchMedia
           ? window.matchMedia("(prefers-color-scheme: dark)").matches

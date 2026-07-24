@@ -7,6 +7,15 @@
  * a host app can pass a theme name, a mode, or partial token overrides.
  */
 import type { CSSProperties } from "react";
+import {
+  resolveTokens as resolveBrandTokens,
+  PALETTE_NAMES,
+  type PaletteName,
+} from "@monetizekit/design-tokens";
+
+/** Re-export the palette axis so consumers/Storybook can enumerate it. */
+export { PALETTE_NAMES };
+export type { PaletteName };
 
 export interface ThemeTokens {
   colorBackground: string;
@@ -33,6 +42,7 @@ export interface ThemeTokens {
 const SANS = "system-ui, -apple-system, sans-serif";
 
 export type ThemeName =
+  | "brand"
   | "default"
   | "dashboard"
   | "memphis"
@@ -49,8 +59,46 @@ export interface ThemeVariants {
   dark: ThemeTokens;
 }
 
+/**
+ * Adapt a `@monetizekit/design-tokens` resolution (the canonical `theme × palette × mode`
+ * model) into the SDK's flat `ThemeTokens`. This mirrors the token→`--mk-*` mapping, so the
+ * brand theme emits the exact same `--mk-*` contract as every hand-tuned theme below.
+ */
+function brandTokens(palette: PaletteName, mode: ThemeMode, prefersDark: boolean): ThemeTokens {
+  const { semantic, brand } = resolveBrandTokens(
+    { theme: "brand", palette, mode },
+    { prefersDark },
+  );
+  return {
+    colorBackground: semantic.background,
+    colorForeground: semantic.foreground,
+    colorMuted: semantic["muted-foreground"],
+    colorPrimary: semantic.primary,
+    colorPrimaryForeground: semantic["primary-foreground"],
+    colorAccent: semantic.accent,
+    colorBorder: semantic.border,
+    colorCard: semantic.card,
+    colorCardForeground: semantic["card-foreground"],
+    colorSuccess: semantic.success,
+    colorWarning: semantic.warning,
+    colorDanger: semantic.destructive,
+    radius: brand.radius,
+    shadow: brand.shadow.sm,
+    fontFamily: brand.typography.fontSans,
+  };
+}
+
 /** Brand themes, each with a hand-tuned light + dark variant. */
 export const THEMES: Record<ThemeName, ThemeVariants> = {
+  /**
+   * The canonical MonetizeKit brand theme, sourced from `@monetizekit/design-tokens`. Unlike the
+   * hand-tuned themes below, it supports the optional `palette` axis (see `Appearance`); the
+   * variants captured here are its `default` palette.
+   */
+  brand: {
+    light: brandTokens("default", "light", false),
+    dark: brandTokens("default", "dark", false),
+  },
   default: {
     light: {
       colorBackground: "#ffffff", colorForeground: "#0a0a0a", colorMuted: "#71717a",
@@ -213,12 +261,21 @@ export const THEME_PRESETS: Record<ThemePresetName, ThemeTokens> = {
 
 export const THEME_PRESET_NAMES = Object.keys(THEME_PRESETS) as ThemePresetName[];
 
+/** The theme-object form of an appearance. `palette` applies only to the `brand` theme. */
+export interface ThemeAppearance {
+  theme: ThemeName;
+  mode?: ThemeMode;
+  /** Semantic color scheme — only honored for the `brand` theme; ignored by hand-tuned themes. */
+  palette?: PaletteName;
+  tokens?: Partial<ThemeTokens>;
+}
+
 export type Appearance =
   | ThemePresetName
   | { preset?: ThemePresetName; tokens?: Partial<ThemeTokens> }
-  | { theme: ThemeName; mode?: ThemeMode; tokens?: Partial<ThemeTokens> };
+  | ThemeAppearance;
 
-function isThemeForm(a: Appearance): a is { theme: ThemeName; mode?: ThemeMode; tokens?: Partial<ThemeTokens> } {
+function isThemeForm(a: Appearance): a is ThemeAppearance {
   return typeof a === "object" && a !== null && "theme" in a;
 }
 
@@ -232,8 +289,12 @@ export function resolveTokens(appearance: Appearance = "light", prefersDark = fa
     return THEME_PRESETS[appearance];
   }
   if (isThemeForm(appearance)) {
-    const variants = THEMES[appearance.theme];
     const mode = appearance.mode ?? "light";
+    if (appearance.theme === "brand") {
+      const base = brandTokens(appearance.palette ?? "default", mode, prefersDark);
+      return { ...base, ...appearance.tokens };
+    }
+    const variants = THEMES[appearance.theme];
     const base = mode === "dark" || (mode === "system" && prefersDark) ? variants.dark : variants.light;
     return { ...base, ...appearance.tokens };
   }

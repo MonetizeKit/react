@@ -1,0 +1,721 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`back-compat: existing appearances are byte-stable > emits a byte-stable --mk-* custom-property set per preset > mkvars:console 1`] = `
+{
+  "--mk-accent": "#00D9FF",
+  "--mk-bg": "#0b0f14",
+  "--mk-border": "#1f2630",
+  "--mk-card": "#11161d",
+  "--mk-card-fg": "#e6edf3",
+  "--mk-danger": "#f87171",
+  "--mk-fg": "#e6edf3",
+  "--mk-font": "Geist, system-ui, sans-serif",
+  "--mk-muted": "#8b949e",
+  "--mk-primary": "#6366f1",
+  "--mk-primary-fg": "#ffffff",
+  "--mk-radius": "0.625rem",
+  "--mk-shadow": "0 8px 24px rgba(0,0,0,0.5)",
+  "--mk-success": "#34d399",
+  "--mk-warning": "#fbbf24",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > emits a byte-stable --mk-* custom-property set per preset > mkvars:dark 1`] = `
+{
+  "--mk-accent": "#10b981",
+  "--mk-bg": "#0a0a0a",
+  "--mk-border": "#27272a",
+  "--mk-card": "#18181b",
+  "--mk-card-fg": "#fafafa",
+  "--mk-danger": "#ef4444",
+  "--mk-fg": "#fafafa",
+  "--mk-font": "system-ui, -apple-system, sans-serif",
+  "--mk-muted": "#a1a1aa",
+  "--mk-primary": "#6366f1",
+  "--mk-primary-fg": "#0a0a0a",
+  "--mk-radius": "0.5rem",
+  "--mk-shadow": "0 1px 3px rgba(0,0,0,0.4)",
+  "--mk-success": "#22c55e",
+  "--mk-warning": "#f59e0b",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > emits a byte-stable --mk-* custom-property set per preset > mkvars:dashboard 1`] = `
+{
+  "--mk-accent": "oklch(0.97 0 0)",
+  "--mk-bg": "oklch(1 0 0)",
+  "--mk-border": "oklch(0.922 0 0)",
+  "--mk-card": "oklch(1 0 0)",
+  "--mk-card-fg": "oklch(0.145 0 0)",
+  "--mk-danger": "#dc2626",
+  "--mk-fg": "oklch(0.145 0 0)",
+  "--mk-font": "Geist, system-ui, sans-serif",
+  "--mk-muted": "oklch(0.556 0 0)",
+  "--mk-primary": "oklch(0.205 0 0)",
+  "--mk-primary-fg": "oklch(0.985 0 0)",
+  "--mk-radius": "0.625rem",
+  "--mk-shadow": "0 1px 2px rgba(0,0,0,0.06)",
+  "--mk-success": "#16a34a",
+  "--mk-warning": "#d97706",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > emits a byte-stable --mk-* custom-property set per preset > mkvars:forest 1`] = `
+{
+  "--mk-accent": "#65a30d",
+  "--mk-bg": "#f7fee7",
+  "--mk-border": "#d9f99d",
+  "--mk-card": "#ffffff",
+  "--mk-card-fg": "#1a2e05",
+  "--mk-danger": "#dc2626",
+  "--mk-fg": "#1a2e05",
+  "--mk-font": "system-ui, -apple-system, sans-serif",
+  "--mk-muted": "#5c6b47",
+  "--mk-primary": "#4d7c0f",
+  "--mk-primary-fg": "#ffffff",
+  "--mk-radius": "0.5rem",
+  "--mk-shadow": "0 4px 14px rgba(77,124,15,0.12)",
+  "--mk-success": "#16a34a",
+  "--mk-warning": "#ca8a04",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > emits a byte-stable --mk-* custom-property set per preset > mkvars:grape 1`] = `
+{
+  "--mk-accent": "#d946ef",
+  "--mk-bg": "#faf5ff",
+  "--mk-border": "#e9d5ff",
+  "--mk-card": "#ffffff",
+  "--mk-card-fg": "#2e1065",
+  "--mk-danger": "#dc2626",
+  "--mk-fg": "#2e1065",
+  "--mk-font": "system-ui, -apple-system, sans-serif",
+  "--mk-muted": "#7c6f93",
+  "--mk-primary": "#7c3aed",
+  "--mk-primary-fg": "#ffffff",
+  "--mk-radius": "0.875rem",
+  "--mk-shadow": "0 6px 20px rgba(124,58,237,0.15)",
+  "--mk-success": "#16a34a",
+  "--mk-warning": "#d97706",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > emits a byte-stable --mk-* custom-property set per preset > mkvars:light 1`] = `
+{
+  "--mk-accent": "#10b981",
+  "--mk-bg": "#ffffff",
+  "--mk-border": "#e4e4e7",
+  "--mk-card": "#ffffff",
+  "--mk-card-fg": "#0a0a0a",
+  "--mk-danger": "#dc2626",
+  "--mk-fg": "#0a0a0a",
+  "--mk-font": "system-ui, -apple-system, sans-serif",
+  "--mk-muted": "#71717a",
+  "--mk-primary": "#4f46e5",
+  "--mk-primary-fg": "#ffffff",
+  "--mk-radius": "0.5rem",
+  "--mk-shadow": "0 1px 3px rgba(0,0,0,0.1)",
+  "--mk-success": "#16a34a",
+  "--mk-warning": "#d97706",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > emits a byte-stable --mk-* custom-property set per preset > mkvars:memphis 1`] = `
+{
+  "--mk-accent": "#00D9FF",
+  "--mk-bg": "#FFFEF2",
+  "--mk-border": "#1a1a1a",
+  "--mk-card": "#ffffff",
+  "--mk-card-fg": "#1a1a1a",
+  "--mk-danger": "#FF3B30",
+  "--mk-fg": "#1a1a1a",
+  "--mk-font": "system-ui, -apple-system, sans-serif",
+  "--mk-muted": "#5b5b52",
+  "--mk-primary": "#FF6B35",
+  "--mk-primary-fg": "#1a1a1a",
+  "--mk-radius": "0",
+  "--mk-shadow": "4px 4px 0 #1a1a1a",
+  "--mk-success": "#00C853",
+  "--mk-warning": "#FFB400",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > emits a byte-stable --mk-* custom-property set per preset > mkvars:midnight 1`] = `
+{
+  "--mk-accent": "#38bdf8",
+  "--mk-bg": "#0f172a",
+  "--mk-border": "#1e293b",
+  "--mk-card": "#1e293b",
+  "--mk-card-fg": "#e2e8f0",
+  "--mk-danger": "#fb7185",
+  "--mk-fg": "#e2e8f0",
+  "--mk-font": "system-ui, -apple-system, sans-serif",
+  "--mk-muted": "#94a3b8",
+  "--mk-primary": "#818cf8",
+  "--mk-primary-fg": "#0f172a",
+  "--mk-radius": "0.75rem",
+  "--mk-shadow": "0 10px 30px rgba(2,6,23,0.6)",
+  "--mk-success": "#4ade80",
+  "--mk-warning": "#facc15",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > emits a byte-stable --mk-* custom-property set per preset > mkvars:ocean 1`] = `
+{
+  "--mk-accent": "#06b6d4",
+  "--mk-bg": "#f0fdfa",
+  "--mk-border": "#99f6e4",
+  "--mk-card": "#ffffff",
+  "--mk-card-fg": "#0f3d3e",
+  "--mk-danger": "#e11d48",
+  "--mk-fg": "#0f3d3e",
+  "--mk-font": "system-ui, -apple-system, sans-serif",
+  "--mk-muted": "#5b7c7d",
+  "--mk-primary": "#0d9488",
+  "--mk-primary-fg": "#ffffff",
+  "--mk-radius": "0.75rem",
+  "--mk-shadow": "0 4px 14px rgba(13,148,136,0.15)",
+  "--mk-success": "#059669",
+  "--mk-warning": "#d97706",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > emits a byte-stable --mk-* custom-property set per preset > mkvars:sunset 1`] = `
+{
+  "--mk-accent": "#f43f5e",
+  "--mk-bg": "#fff7ed",
+  "--mk-border": "#fed7aa",
+  "--mk-card": "#ffffff",
+  "--mk-card-fg": "#431407",
+  "--mk-danger": "#e11d48",
+  "--mk-fg": "#431407",
+  "--mk-font": "system-ui, -apple-system, sans-serif",
+  "--mk-muted": "#9a6b4f",
+  "--mk-primary": "#ea580c",
+  "--mk-primary-fg": "#ffffff",
+  "--mk-radius": "1rem",
+  "--mk-shadow": "0 6px 20px rgba(234,88,12,0.15)",
+  "--mk-success": "#16a34a",
+  "--mk-warning": "#d97706",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > every flat preset resolves to its locked token set > preset:console 1`] = `
+{
+  "colorAccent": "#00D9FF",
+  "colorBackground": "#0b0f14",
+  "colorBorder": "#1f2630",
+  "colorCard": "#11161d",
+  "colorCardForeground": "#e6edf3",
+  "colorDanger": "#f87171",
+  "colorForeground": "#e6edf3",
+  "colorMuted": "#8b949e",
+  "colorPrimary": "#6366f1",
+  "colorPrimaryForeground": "#ffffff",
+  "colorSuccess": "#34d399",
+  "colorWarning": "#fbbf24",
+  "fontFamily": "Geist, system-ui, sans-serif",
+  "radius": "0.625rem",
+  "shadow": "0 8px 24px rgba(0,0,0,0.5)",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > every flat preset resolves to its locked token set > preset:dark 1`] = `
+{
+  "colorAccent": "#10b981",
+  "colorBackground": "#0a0a0a",
+  "colorBorder": "#27272a",
+  "colorCard": "#18181b",
+  "colorCardForeground": "#fafafa",
+  "colorDanger": "#ef4444",
+  "colorForeground": "#fafafa",
+  "colorMuted": "#a1a1aa",
+  "colorPrimary": "#6366f1",
+  "colorPrimaryForeground": "#0a0a0a",
+  "colorSuccess": "#22c55e",
+  "colorWarning": "#f59e0b",
+  "fontFamily": "system-ui, -apple-system, sans-serif",
+  "radius": "0.5rem",
+  "shadow": "0 1px 3px rgba(0,0,0,0.4)",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > every flat preset resolves to its locked token set > preset:dashboard 1`] = `
+{
+  "colorAccent": "oklch(0.97 0 0)",
+  "colorBackground": "oklch(1 0 0)",
+  "colorBorder": "oklch(0.922 0 0)",
+  "colorCard": "oklch(1 0 0)",
+  "colorCardForeground": "oklch(0.145 0 0)",
+  "colorDanger": "#dc2626",
+  "colorForeground": "oklch(0.145 0 0)",
+  "colorMuted": "oklch(0.556 0 0)",
+  "colorPrimary": "oklch(0.205 0 0)",
+  "colorPrimaryForeground": "oklch(0.985 0 0)",
+  "colorSuccess": "#16a34a",
+  "colorWarning": "#d97706",
+  "fontFamily": "Geist, system-ui, sans-serif",
+  "radius": "0.625rem",
+  "shadow": "0 1px 2px rgba(0,0,0,0.06)",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > every flat preset resolves to its locked token set > preset:forest 1`] = `
+{
+  "colorAccent": "#65a30d",
+  "colorBackground": "#f7fee7",
+  "colorBorder": "#d9f99d",
+  "colorCard": "#ffffff",
+  "colorCardForeground": "#1a2e05",
+  "colorDanger": "#dc2626",
+  "colorForeground": "#1a2e05",
+  "colorMuted": "#5c6b47",
+  "colorPrimary": "#4d7c0f",
+  "colorPrimaryForeground": "#ffffff",
+  "colorSuccess": "#16a34a",
+  "colorWarning": "#ca8a04",
+  "fontFamily": "system-ui, -apple-system, sans-serif",
+  "radius": "0.5rem",
+  "shadow": "0 4px 14px rgba(77,124,15,0.12)",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > every flat preset resolves to its locked token set > preset:grape 1`] = `
+{
+  "colorAccent": "#d946ef",
+  "colorBackground": "#faf5ff",
+  "colorBorder": "#e9d5ff",
+  "colorCard": "#ffffff",
+  "colorCardForeground": "#2e1065",
+  "colorDanger": "#dc2626",
+  "colorForeground": "#2e1065",
+  "colorMuted": "#7c6f93",
+  "colorPrimary": "#7c3aed",
+  "colorPrimaryForeground": "#ffffff",
+  "colorSuccess": "#16a34a",
+  "colorWarning": "#d97706",
+  "fontFamily": "system-ui, -apple-system, sans-serif",
+  "radius": "0.875rem",
+  "shadow": "0 6px 20px rgba(124,58,237,0.15)",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > every flat preset resolves to its locked token set > preset:light 1`] = `
+{
+  "colorAccent": "#10b981",
+  "colorBackground": "#ffffff",
+  "colorBorder": "#e4e4e7",
+  "colorCard": "#ffffff",
+  "colorCardForeground": "#0a0a0a",
+  "colorDanger": "#dc2626",
+  "colorForeground": "#0a0a0a",
+  "colorMuted": "#71717a",
+  "colorPrimary": "#4f46e5",
+  "colorPrimaryForeground": "#ffffff",
+  "colorSuccess": "#16a34a",
+  "colorWarning": "#d97706",
+  "fontFamily": "system-ui, -apple-system, sans-serif",
+  "radius": "0.5rem",
+  "shadow": "0 1px 3px rgba(0,0,0,0.1)",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > every flat preset resolves to its locked token set > preset:memphis 1`] = `
+{
+  "colorAccent": "#00D9FF",
+  "colorBackground": "#FFFEF2",
+  "colorBorder": "#1a1a1a",
+  "colorCard": "#ffffff",
+  "colorCardForeground": "#1a1a1a",
+  "colorDanger": "#FF3B30",
+  "colorForeground": "#1a1a1a",
+  "colorMuted": "#5b5b52",
+  "colorPrimary": "#FF6B35",
+  "colorPrimaryForeground": "#1a1a1a",
+  "colorSuccess": "#00C853",
+  "colorWarning": "#FFB400",
+  "fontFamily": "system-ui, -apple-system, sans-serif",
+  "radius": "0",
+  "shadow": "4px 4px 0 #1a1a1a",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > every flat preset resolves to its locked token set > preset:midnight 1`] = `
+{
+  "colorAccent": "#38bdf8",
+  "colorBackground": "#0f172a",
+  "colorBorder": "#1e293b",
+  "colorCard": "#1e293b",
+  "colorCardForeground": "#e2e8f0",
+  "colorDanger": "#fb7185",
+  "colorForeground": "#e2e8f0",
+  "colorMuted": "#94a3b8",
+  "colorPrimary": "#818cf8",
+  "colorPrimaryForeground": "#0f172a",
+  "colorSuccess": "#4ade80",
+  "colorWarning": "#facc15",
+  "fontFamily": "system-ui, -apple-system, sans-serif",
+  "radius": "0.75rem",
+  "shadow": "0 10px 30px rgba(2,6,23,0.6)",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > every flat preset resolves to its locked token set > preset:ocean 1`] = `
+{
+  "colorAccent": "#06b6d4",
+  "colorBackground": "#f0fdfa",
+  "colorBorder": "#99f6e4",
+  "colorCard": "#ffffff",
+  "colorCardForeground": "#0f3d3e",
+  "colorDanger": "#e11d48",
+  "colorForeground": "#0f3d3e",
+  "colorMuted": "#5b7c7d",
+  "colorPrimary": "#0d9488",
+  "colorPrimaryForeground": "#ffffff",
+  "colorSuccess": "#059669",
+  "colorWarning": "#d97706",
+  "fontFamily": "system-ui, -apple-system, sans-serif",
+  "radius": "0.75rem",
+  "shadow": "0 4px 14px rgba(13,148,136,0.15)",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > every flat preset resolves to its locked token set > preset:sunset 1`] = `
+{
+  "colorAccent": "#f43f5e",
+  "colorBackground": "#fff7ed",
+  "colorBorder": "#fed7aa",
+  "colorCard": "#ffffff",
+  "colorCardForeground": "#431407",
+  "colorDanger": "#e11d48",
+  "colorForeground": "#431407",
+  "colorMuted": "#9a6b4f",
+  "colorPrimary": "#ea580c",
+  "colorPrimaryForeground": "#ffffff",
+  "colorSuccess": "#16a34a",
+  "colorWarning": "#d97706",
+  "fontFamily": "system-ui, -apple-system, sans-serif",
+  "radius": "1rem",
+  "shadow": "0 6px 20px rgba(234,88,12,0.15)",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > every hand-tuned theme resolves to its locked light + dark token set > theme:dashboard:dark 1`] = `
+{
+  "colorAccent": "#00D9FF",
+  "colorBackground": "#0b0f14",
+  "colorBorder": "#1f2630",
+  "colorCard": "#11161d",
+  "colorCardForeground": "#e6edf3",
+  "colorDanger": "#f87171",
+  "colorForeground": "#e6edf3",
+  "colorMuted": "#8b949e",
+  "colorPrimary": "#6366f1",
+  "colorPrimaryForeground": "#ffffff",
+  "colorSuccess": "#34d399",
+  "colorWarning": "#fbbf24",
+  "fontFamily": "Geist, system-ui, sans-serif",
+  "radius": "0.625rem",
+  "shadow": "0 8px 24px rgba(0,0,0,0.5)",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > every hand-tuned theme resolves to its locked light + dark token set > theme:dashboard:light 1`] = `
+{
+  "colorAccent": "oklch(0.97 0 0)",
+  "colorBackground": "oklch(1 0 0)",
+  "colorBorder": "oklch(0.922 0 0)",
+  "colorCard": "oklch(1 0 0)",
+  "colorCardForeground": "oklch(0.145 0 0)",
+  "colorDanger": "#dc2626",
+  "colorForeground": "oklch(0.145 0 0)",
+  "colorMuted": "oklch(0.556 0 0)",
+  "colorPrimary": "oklch(0.205 0 0)",
+  "colorPrimaryForeground": "oklch(0.985 0 0)",
+  "colorSuccess": "#16a34a",
+  "colorWarning": "#d97706",
+  "fontFamily": "Geist, system-ui, sans-serif",
+  "radius": "0.625rem",
+  "shadow": "0 1px 2px rgba(0,0,0,0.06)",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > every hand-tuned theme resolves to its locked light + dark token set > theme:default:dark 1`] = `
+{
+  "colorAccent": "#10b981",
+  "colorBackground": "#0a0a0a",
+  "colorBorder": "#27272a",
+  "colorCard": "#18181b",
+  "colorCardForeground": "#fafafa",
+  "colorDanger": "#ef4444",
+  "colorForeground": "#fafafa",
+  "colorMuted": "#a1a1aa",
+  "colorPrimary": "#6366f1",
+  "colorPrimaryForeground": "#0a0a0a",
+  "colorSuccess": "#22c55e",
+  "colorWarning": "#f59e0b",
+  "fontFamily": "system-ui, -apple-system, sans-serif",
+  "radius": "0.5rem",
+  "shadow": "0 1px 3px rgba(0,0,0,0.4)",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > every hand-tuned theme resolves to its locked light + dark token set > theme:default:light 1`] = `
+{
+  "colorAccent": "#10b981",
+  "colorBackground": "#ffffff",
+  "colorBorder": "#e4e4e7",
+  "colorCard": "#ffffff",
+  "colorCardForeground": "#0a0a0a",
+  "colorDanger": "#dc2626",
+  "colorForeground": "#0a0a0a",
+  "colorMuted": "#71717a",
+  "colorPrimary": "#4f46e5",
+  "colorPrimaryForeground": "#ffffff",
+  "colorSuccess": "#16a34a",
+  "colorWarning": "#d97706",
+  "fontFamily": "system-ui, -apple-system, sans-serif",
+  "radius": "0.5rem",
+  "shadow": "0 1px 3px rgba(0,0,0,0.1)",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > every hand-tuned theme resolves to its locked light + dark token set > theme:forest:dark 1`] = `
+{
+  "colorAccent": "#84cc16",
+  "colorBackground": "#0d1f0a",
+  "colorBorder": "#1a3010",
+  "colorCard": "#16301a",
+  "colorCardForeground": "#ecfccb",
+  "colorDanger": "#f87171",
+  "colorForeground": "#ecfccb",
+  "colorMuted": "#a3b18a",
+  "colorPrimary": "#a3e635",
+  "colorPrimaryForeground": "#0d1f0a",
+  "colorSuccess": "#4ade80",
+  "colorWarning": "#facc15",
+  "fontFamily": "system-ui, -apple-system, sans-serif",
+  "radius": "0.5rem",
+  "shadow": "0 10px 30px rgba(5,20,5,0.6)",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > every hand-tuned theme resolves to its locked light + dark token set > theme:forest:light 1`] = `
+{
+  "colorAccent": "#65a30d",
+  "colorBackground": "#f7fee7",
+  "colorBorder": "#d9f99d",
+  "colorCard": "#ffffff",
+  "colorCardForeground": "#1a2e05",
+  "colorDanger": "#dc2626",
+  "colorForeground": "#1a2e05",
+  "colorMuted": "#5c6b47",
+  "colorPrimary": "#4d7c0f",
+  "colorPrimaryForeground": "#ffffff",
+  "colorSuccess": "#16a34a",
+  "colorWarning": "#ca8a04",
+  "fontFamily": "system-ui, -apple-system, sans-serif",
+  "radius": "0.5rem",
+  "shadow": "0 4px 14px rgba(77,124,15,0.12)",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > every hand-tuned theme resolves to its locked light + dark token set > theme:grape:dark 1`] = `
+{
+  "colorAccent": "#e879f9",
+  "colorBackground": "#1a0f2e",
+  "colorBorder": "#251440",
+  "colorCard": "#251440",
+  "colorCardForeground": "#f3e8ff",
+  "colorDanger": "#fb7185",
+  "colorForeground": "#f3e8ff",
+  "colorMuted": "#b9a6d6",
+  "colorPrimary": "#a78bfa",
+  "colorPrimaryForeground": "#1a0f2e",
+  "colorSuccess": "#4ade80",
+  "colorWarning": "#facc15",
+  "fontFamily": "system-ui, -apple-system, sans-serif",
+  "radius": "0.875rem",
+  "shadow": "0 10px 30px rgba(12,6,26,0.6)",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > every hand-tuned theme resolves to its locked light + dark token set > theme:grape:light 1`] = `
+{
+  "colorAccent": "#d946ef",
+  "colorBackground": "#faf5ff",
+  "colorBorder": "#e9d5ff",
+  "colorCard": "#ffffff",
+  "colorCardForeground": "#2e1065",
+  "colorDanger": "#dc2626",
+  "colorForeground": "#2e1065",
+  "colorMuted": "#7c6f93",
+  "colorPrimary": "#7c3aed",
+  "colorPrimaryForeground": "#ffffff",
+  "colorSuccess": "#16a34a",
+  "colorWarning": "#d97706",
+  "fontFamily": "system-ui, -apple-system, sans-serif",
+  "radius": "0.875rem",
+  "shadow": "0 6px 20px rgba(124,58,237,0.15)",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > every hand-tuned theme resolves to its locked light + dark token set > theme:memphis:dark 1`] = `
+{
+  "colorAccent": "#00D9FF",
+  "colorBackground": "#1a1a1a",
+  "colorBorder": "#FFFEF2",
+  "colorCard": "#242424",
+  "colorCardForeground": "#FFFEF2",
+  "colorDanger": "#FF5252",
+  "colorForeground": "#FFFEF2",
+  "colorMuted": "#b8b8a8",
+  "colorPrimary": "#FF6B35",
+  "colorPrimaryForeground": "#1a1a1a",
+  "colorSuccess": "#00E676",
+  "colorWarning": "#FFC400",
+  "fontFamily": "system-ui, -apple-system, sans-serif",
+  "radius": "0",
+  "shadow": "4px 4px 0 #00D9FF",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > every hand-tuned theme resolves to its locked light + dark token set > theme:memphis:light 1`] = `
+{
+  "colorAccent": "#00D9FF",
+  "colorBackground": "#FFFEF2",
+  "colorBorder": "#1a1a1a",
+  "colorCard": "#ffffff",
+  "colorCardForeground": "#1a1a1a",
+  "colorDanger": "#FF3B30",
+  "colorForeground": "#1a1a1a",
+  "colorMuted": "#5b5b52",
+  "colorPrimary": "#FF6B35",
+  "colorPrimaryForeground": "#1a1a1a",
+  "colorSuccess": "#00C853",
+  "colorWarning": "#FFB400",
+  "fontFamily": "system-ui, -apple-system, sans-serif",
+  "radius": "0",
+  "shadow": "4px 4px 0 #1a1a1a",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > every hand-tuned theme resolves to its locked light + dark token set > theme:ocean:dark 1`] = `
+{
+  "colorAccent": "#22d3ee",
+  "colorBackground": "#042f2e",
+  "colorBorder": "#0b3d3a",
+  "colorCard": "#0b3d3a",
+  "colorCardForeground": "#ccfbf1",
+  "colorDanger": "#fb7185",
+  "colorForeground": "#ccfbf1",
+  "colorMuted": "#5eead4",
+  "colorPrimary": "#2dd4bf",
+  "colorPrimaryForeground": "#042f2e",
+  "colorSuccess": "#34d399",
+  "colorWarning": "#fbbf24",
+  "fontFamily": "system-ui, -apple-system, sans-serif",
+  "radius": "0.75rem",
+  "shadow": "0 10px 30px rgba(2,20,19,0.6)",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > every hand-tuned theme resolves to its locked light + dark token set > theme:ocean:light 1`] = `
+{
+  "colorAccent": "#06b6d4",
+  "colorBackground": "#f0fdfa",
+  "colorBorder": "#99f6e4",
+  "colorCard": "#ffffff",
+  "colorCardForeground": "#0f3d3e",
+  "colorDanger": "#e11d48",
+  "colorForeground": "#0f3d3e",
+  "colorMuted": "#5b7c7d",
+  "colorPrimary": "#0d9488",
+  "colorPrimaryForeground": "#ffffff",
+  "colorSuccess": "#059669",
+  "colorWarning": "#d97706",
+  "fontFamily": "system-ui, -apple-system, sans-serif",
+  "radius": "0.75rem",
+  "shadow": "0 4px 14px rgba(13,148,136,0.15)",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > every hand-tuned theme resolves to its locked light + dark token set > theme:slate:dark 1`] = `
+{
+  "colorAccent": "#38bdf8",
+  "colorBackground": "#0f172a",
+  "colorBorder": "#1e293b",
+  "colorCard": "#1e293b",
+  "colorCardForeground": "#e2e8f0",
+  "colorDanger": "#fb7185",
+  "colorForeground": "#e2e8f0",
+  "colorMuted": "#94a3b8",
+  "colorPrimary": "#818cf8",
+  "colorPrimaryForeground": "#0f172a",
+  "colorSuccess": "#4ade80",
+  "colorWarning": "#facc15",
+  "fontFamily": "system-ui, -apple-system, sans-serif",
+  "radius": "0.75rem",
+  "shadow": "0 10px 30px rgba(2,6,23,0.6)",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > every hand-tuned theme resolves to its locked light + dark token set > theme:slate:light 1`] = `
+{
+  "colorAccent": "#0ea5e9",
+  "colorBackground": "#f8fafc",
+  "colorBorder": "#e2e8f0",
+  "colorCard": "#ffffff",
+  "colorCardForeground": "#0f172a",
+  "colorDanger": "#e11d48",
+  "colorForeground": "#0f172a",
+  "colorMuted": "#64748b",
+  "colorPrimary": "#4f46e5",
+  "colorPrimaryForeground": "#ffffff",
+  "colorSuccess": "#16a34a",
+  "colorWarning": "#d97706",
+  "fontFamily": "system-ui, -apple-system, sans-serif",
+  "radius": "0.75rem",
+  "shadow": "0 4px 14px rgba(15,23,42,0.08)",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > every hand-tuned theme resolves to its locked light + dark token set > theme:sunset:dark 1`] = `
+{
+  "colorAccent": "#fb7185",
+  "colorBackground": "#1f1207",
+  "colorBorder": "#2a1a0e",
+  "colorCard": "#2a1a0e",
+  "colorCardForeground": "#ffedd5",
+  "colorDanger": "#fb7185",
+  "colorForeground": "#ffedd5",
+  "colorMuted": "#c9a78f",
+  "colorPrimary": "#fb923c",
+  "colorPrimaryForeground": "#1f1207",
+  "colorSuccess": "#4ade80",
+  "colorWarning": "#fbbf24",
+  "fontFamily": "system-ui, -apple-system, sans-serif",
+  "radius": "1rem",
+  "shadow": "0 10px 30px rgba(31,18,7,0.6)",
+}
+`;
+
+exports[`back-compat: existing appearances are byte-stable > every hand-tuned theme resolves to its locked light + dark token set > theme:sunset:light 1`] = `
+{
+  "colorAccent": "#f43f5e",
+  "colorBackground": "#fff7ed",
+  "colorBorder": "#fed7aa",
+  "colorCard": "#ffffff",
+  "colorCardForeground": "#431407",
+  "colorDanger": "#e11d48",
+  "colorForeground": "#431407",
+  "colorMuted": "#9a6b4f",
+  "colorPrimary": "#ea580c",
+  "colorPrimaryForeground": "#ffffff",
+  "colorSuccess": "#16a34a",
+  "colorWarning": "#d97706",
+  "fontFamily": "system-ui, -apple-system, sans-serif",
+  "radius": "1rem",
+  "shadow": "0 6px 20px rgba(234,88,12,0.15)",
+}
+`;
