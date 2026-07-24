@@ -27,6 +27,9 @@ importers:
       '@eslint/js':
         specifier: ^9.20.0
         version: 9.39.4
+      '@monetizekit/brand':
+        specifier: 0.2.0-next-20260724190859
+        version: 0.2.0-next-20260724190859
       '@playwright/test':
         specifier: ^1.61.1
         version: 1.61.1
@@ -927,8 +930,14 @@ packages:
       '@types/react': '>=16'
       react: '>=16'
 
+  '@monetizekit/brand@0.2.0-next-20260724190859':
+    resolution: {integrity: sha512-XU/bZxwJS4d2M9M9UAOGpadc+1NNiDSetfw/V/NLXwjQiWsp3SAxC6n1uKIIfhl8mxE8F0GC0cUOwAWbxxxbig==}
+
   '@monetizekit/design-tokens@0.3.0':
     resolution: {integrity: sha512-75PZCunx1gZhCsB19k0xCW8fYd0yqVHIDC/TTsmBgNM3vsRDuqF0INPOlhYcel+xYlxUJsrz887hPJVDywibJQ==}
+
+  '@monetizekit/design-tokens@0.4.0-next-20260724190859':
+    resolution: {integrity: sha512-pfBRFsyNnpcdD/67hnfDmInCLoyCawNi3/hugeV4AcIMjiugEb32PQnT7umL9+plLoAkW8Rx98inl7i0nWCXBg==}
 
   '@monetizekit/types@0.1.0':
     resolution: {integrity: sha512-U2Brn5e1daIlOOFB+PGDuPjH4iTVldIQNR/eI/Ruuc5rnraYrpoI0rgvGJ309tb/FNxzP44jYSG69njzU34JJg==}
@@ -5217,7 +5226,13 @@ snapshots:
       '@types/react': 19.2.17
       react: 19.2.7
 
+  '@monetizekit/brand@0.2.0-next-20260724190859':
+    dependencies:
+      '@monetizekit/design-tokens': 0.4.0-next-20260724190859
+
   '@monetizekit/design-tokens@0.3.0': {}
+
+  '@monetizekit/design-tokens@0.4.0-next-20260724190859': {}
 
   '@monetizekit/types@0.1.0': {}
 
