@@ -122,8 +122,8 @@ exports[`back-compat: existing appearances are byte-stable > emits a byte-stable
 
 exports[`back-compat: existing appearances are byte-stable > emits a byte-stable --mk-* custom-property set per preset > mkvars:memphis 1`] = `
 {
-  "--mk-accent": "#00D9FF",
-  "--mk-bg": "#FFFEF2",
+  "--mk-accent": "#62D6FA",
+  "--mk-bg": "#FFFEF3",
   "--mk-border": "#1a1a1a",
   "--mk-card": "#ffffff",
   "--mk-card-fg": "#1a1a1a",
@@ -322,8 +322,8 @@ exports[`back-compat: existing appearances are byte-stable > every flat preset r
 
 exports[`back-compat: existing appearances are byte-stable > every flat preset resolves to its locked token set > preset:memphis 1`] = `
 {
-  "colorAccent": "#00D9FF",
-  "colorBackground": "#FFFEF2",
+  "colorAccent": "#62D6FA",
+  "colorBackground": "#FFFEF3",
   "colorBorder": "#1a1a1a",
   "colorCard": "#ffffff",
   "colorCardForeground": "#1a1a1a",
@@ -562,13 +562,13 @@ exports[`back-compat: existing appearances are byte-stable > every hand-tuned th
 
 exports[`back-compat: existing appearances are byte-stable > every hand-tuned theme resolves to its locked light + dark token set > theme:memphis:dark 1`] = `
 {
-  "colorAccent": "#00D9FF",
+  "colorAccent": "#62D6FA",
   "colorBackground": "#1a1a1a",
-  "colorBorder": "#FFFEF2",
+  "colorBorder": "#FFFEF3",
   "colorCard": "#242424",
-  "colorCardForeground": "#FFFEF2",
+  "colorCardForeground": "#FFFEF3",
   "colorDanger": "#FF5252",
-  "colorForeground": "#FFFEF2",
+  "colorForeground": "#FFFEF3",
   "colorMuted": "#b8b8a8",
   "colorPrimary": "#FF6B35",
   "colorPrimaryForeground": "#1a1a1a",
@@ -576,14 +576,14 @@ exports[`back-compat: existing appearances are byte-stable > every hand-tuned th
   "colorWarning": "#FFC400",
   "fontFamily": "system-ui, -apple-system, sans-serif",
   "radius": "0",
-  "shadow": "4px 4px 0 #00D9FF",
+  "shadow": "4px 4px 0 #62D6FA",
 }
 `;
 
 exports[`back-compat: existing appearances are byte-stable > every hand-tuned theme resolves to its locked light + dark token set > theme:memphis:light 1`] = `
 {
-  "colorAccent": "#00D9FF",
-  "colorBackground": "#FFFEF2",
+  "colorAccent": "#62D6FA",
+  "colorBackground": "#FFFEF3",
   "colorBorder": "#1a1a1a",
   "colorCard": "#ffffff",
   "colorCardForeground": "#1a1a1a",

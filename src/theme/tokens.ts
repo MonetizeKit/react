@@ -132,19 +132,22 @@ export const THEMES: Record<ThemeName, ThemeVariants> = {
     },
   },
   memphis: {
+    // Realigned to the canonical brand cream (#FFFEF3) + cyan (#62D6FA); the preset previously
+    // carried the drifted #FFFEF2/#00D9FF values (same drift fixed on the marketing site). The
+    // preset name and every other value are unchanged.
     light: {
-      colorBackground: "#FFFEF2", colorForeground: "#1a1a1a", colorMuted: "#5b5b52",
-      colorPrimary: "#FF6B35", colorPrimaryForeground: "#1a1a1a", colorAccent: "#00D9FF",
+      colorBackground: "#FFFEF3", colorForeground: "#1a1a1a", colorMuted: "#5b5b52",
+      colorPrimary: "#FF6B35", colorPrimaryForeground: "#1a1a1a", colorAccent: "#62D6FA",
       colorBorder: "#1a1a1a", colorCard: "#ffffff", colorCardForeground: "#1a1a1a",
       colorSuccess: "#00C853", colorWarning: "#FFB400", colorDanger: "#FF3B30",
       radius: "0", shadow: "4px 4px 0 #1a1a1a", fontFamily: SANS,
     },
     dark: {
-      colorBackground: "#1a1a1a", colorForeground: "#FFFEF2", colorMuted: "#b8b8a8",
-      colorPrimary: "#FF6B35", colorPrimaryForeground: "#1a1a1a", colorAccent: "#00D9FF",
-      colorBorder: "#FFFEF2", colorCard: "#242424", colorCardForeground: "#FFFEF2",
+      colorBackground: "#1a1a1a", colorForeground: "#FFFEF3", colorMuted: "#b8b8a8",
+      colorPrimary: "#FF6B35", colorPrimaryForeground: "#1a1a1a", colorAccent: "#62D6FA",
+      colorBorder: "#FFFEF3", colorCard: "#242424", colorCardForeground: "#FFFEF3",
       colorSuccess: "#00E676", colorWarning: "#FFC400", colorDanger: "#FF5252",
-      radius: "0", shadow: "4px 4px 0 #00D9FF", fontFamily: SANS,
+      radius: "0", shadow: "4px 4px 0 #62D6FA", fontFamily: SANS,
     },
   },
   slate: {
@@ -278,6 +281,14 @@ export type Appearance =
 function isThemeForm(a: Appearance): a is ThemeAppearance {
   return typeof a === "object" && a !== null && "theme" in a;
 }
+
+/**
+ * The default appearance when a host does not pass one. MonetizeKit's own **brand** theme is the
+ * default so SDK components look on-brand out of the box (cream ground, orange primary, Inter type,
+ * hard offset shadow). Every other theme/preset and all overrides remain fully selectable — this
+ * only changes what you get when `appearance` is omitted.
+ */
+export const DEFAULT_APPEARANCE: Appearance = { theme: "brand" };
 
 /**
  * Resolve an appearance into a concrete token set. For `system` mode the caller

@@ -15,6 +15,7 @@ import {
 import {
   resolveTokens,
   appearanceMode,
+  DEFAULT_APPEARANCE,
   type Appearance,
   type ThemeTokens,
 } from "./theme/tokens";
@@ -57,7 +58,7 @@ export interface MonetizeKitProviderProps {
   customerToken?: string;
   /** Customer id for entitlement/usage/credit hooks. */
   customerId?: string;
-  /** Theme preset name or token overrides. */
+  /** Theme preset name or token overrides. Defaults to the MonetizeKit `brand` theme. */
   appearance?: Appearance;
   /** Default BCP-47 locale applied to all components (override per-component via props). */
   locale?: string;
@@ -71,7 +72,7 @@ export function MonetizeKitProvider({
   baseUrl,
   customerToken,
   customerId,
-  appearance = "light",
+  appearance = DEFAULT_APPEARANCE,
   locale,
   currency = "USD",
   children,
