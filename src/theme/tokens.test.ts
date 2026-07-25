@@ -3,6 +3,7 @@ import {
   resolveTokens,
   tokensToStyle,
   appearanceMode,
+  DEFAULT_APPEARANCE,
   THEME_PRESETS,
   THEME_PRESET_NAMES,
   THEMES,
@@ -84,6 +85,15 @@ describe("theme presets (multitude)", () => {
     }
   });
 
+  it("realigns the memphis preset to the canonical brand cream + cyan (drift fixed, name kept)", () => {
+    expect(THEME_PRESET_NAMES).toContain("memphis");
+    const m = THEME_PRESETS.memphis;
+    expect(m.colorBackground).toBe("#FFFEF3");
+    expect(m.colorAccent).toBe("#62D6FA");
+    // Primary coral is canonical and unchanged.
+    expect(m.colorPrimary).toBe("#FF6B35");
+  });
+
   it("captures the dashboard-mock look in the console preset (dark card + emerald/amber/red)", () => {
     const c = THEME_PRESETS.console;
     expect(c.colorCard).toBe("#11161d");
@@ -136,6 +146,10 @@ describe("theme light/dark modes", () => {
 // token set. These snapshots lock the existing contract so future changes
 // (e.g. sourcing brand from design-tokens) can never silently drift a preset,
 // legacy theme, or the emitted --mk-* custom properties.
+//
+// NOTE: the `memphis` preset was intentionally realigned this increment (drifted
+// cream/cyan → canonical #FFFEF3/#62D6FA); its snapshots below were updated on
+// purpose. No preset name was removed and every other appearance stays byte-exact.
 // ---------------------------------------------------------------------------
 describe("back-compat: existing appearances are byte-stable", () => {
   it("every flat preset resolves to its locked token set", () => {
@@ -171,6 +185,15 @@ describe("back-compat: existing appearances are byte-stable", () => {
 // Additive brand theme + palette axis (Surface C), sourced from design-tokens.
 // ---------------------------------------------------------------------------
 describe("brand theme + palette axis", () => {
+  it("uses the brand theme as the default appearance (on-brand out of the box)", () => {
+    const t = resolveTokens(DEFAULT_APPEARANCE);
+    expect(t.colorPrimary).toBe("#FF6B35");
+    expect(t.colorBackground).toBe("#FFFEF3");
+    expect(t.fontFamily).toContain("Inter");
+    // ...but the neutral light preset stays available and unchanged for opt-in.
+    expect(resolveTokens("light").colorBackground).toBe("#ffffff");
+  });
+
   it("exposes the 9-palette axis", () => {
     expect(PALETTE_NAMES).toEqual([
       "default", "nord", "solarized", "dracula", "github", "rose-pine", "blue", "green", "unicorn",

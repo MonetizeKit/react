@@ -133,7 +133,7 @@ const PRICING_TABLE_CSS = `
 @media(min-width:640px){.mk-pt-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(min-width:1024px){.mk-pt-grid{grid-template-columns:repeat(var(--mk-pt-cols,3),minmax(0,1fr))}}
 .mk-pt-card{position:relative;display:flex;flex-direction:column;gap:1rem;background:var(--mk-card);color:var(--mk-card-fg);border:1px solid var(--mk-border);border-radius:var(--mk-radius);padding:1.75rem;box-shadow:var(--mk-shadow);transition:transform .15s ease,box-shadow .15s ease}
-.mk-pt-card:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(0,0,0,.12)}
+.mk-pt-card:hover{transform:translateY(-2px);box-shadow:0 12px 32px color-mix(in srgb,var(--mk-fg) 12%,transparent)}
 .mk-pt-card[data-mk-highlighted="true"]{border-color:var(--mk-primary);border-width:2px;box-shadow:0 16px 40px color-mix(in srgb,var(--mk-primary) 22%,transparent)}
 @media(min-width:1024px){.mk-pt-card[data-mk-highlighted="true"]{transform:translateY(-8px)}.mk-pt-card[data-mk-highlighted="true"]:hover{transform:translateY(-10px)}}
 .mk-pt-badge{position:absolute;top:0;left:50%;transform:translate(-50%,-50%);background:var(--mk-primary);color:var(--mk-primary-fg);border-radius:999px;padding:.25rem .85rem;font-size:.75rem;font-weight:600;letter-spacing:.02em;white-space:nowrap;box-shadow:var(--mk-shadow)}

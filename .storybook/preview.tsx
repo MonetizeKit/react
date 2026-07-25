@@ -34,7 +34,7 @@ const preview: Preview = {
   globalTypes: {
     theme: {
       description: "Brand theme",
-      defaultValue: "default",
+      defaultValue: "brand",
       toolbar: {
         title: "Theme",
         icon: "paintbrush",
@@ -93,7 +93,7 @@ const preview: Preview = {
   },
   decorators: [
     (Story, context) => {
-      const theme = (context.globals.theme as ThemeName) ?? "default";
+      const theme = (context.globals.theme as ThemeName) ?? "brand";
       const mode = (context.globals.mode as ThemeMode) ?? "light";
       const palette = (context.globals.palette as PaletteName) ?? "default";
       const locale = (context.globals.locale as string) ?? "en-US";
@@ -118,8 +118,15 @@ const preview: Preview = {
           <div
             style={{
               ...tokensToStyle(resolveTokens(appearance, prefersDark)),
-              background: "var(--mk-bg)",
+              // Cream (token) ground with a subtle static dot-grid texture (§03); reduced-motion
+              // safe because it never animates. The dot tint derives from the theme foreground so
+              // it reads correctly on every theme/mode.
+              backgroundColor: "var(--mk-bg)",
+              backgroundImage:
+                "radial-gradient(color-mix(in srgb, var(--mk-fg) 6%, transparent) 1px, transparent 1px)",
+              backgroundSize: "22px 22px",
               color: "var(--mk-fg)",
+              fontFamily: "var(--mk-font)",
               padding: "2rem",
               minHeight: "100vh",
             }}

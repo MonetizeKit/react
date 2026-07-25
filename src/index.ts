@@ -84,6 +84,7 @@ export {
   resolveTokens,
   tokensToStyle,
   appearanceMode,
+  DEFAULT_APPEARANCE,
   type Appearance,
   type ThemeAppearance,
   type ThemeTokens,
