@@ -44,6 +44,7 @@
     "release": "changeset publish"
   },
   "dependencies": {
+    "@monetizekit/design-tokens": "^0.3.0",
     "@monetizekit/types": "^0.1.0",
     "@stripe/react-stripe-js": "^6.7.0",
     "@stripe/stripe-js": "^9.9.0"

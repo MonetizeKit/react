@@ -80,15 +80,18 @@ export {
   THEME_NAMES,
   THEME_PRESETS,
   THEME_PRESET_NAMES,
+  PALETTE_NAMES,
   resolveTokens,
   tokensToStyle,
   appearanceMode,
   type Appearance,
+  type ThemeAppearance,
   type ThemeTokens,
   type ThemeVariants,
   type ThemeName,
   type ThemeMode,
   type ThemePresetName,
+  type PaletteName,
 } from "./theme/tokens";
 
 // Illustrative sample data (paired with <SampleNotice/>)
