@@ -1,11 +1,27 @@
 import type { Preview } from "@storybook/react";
+import { DocsContainer, type DocsContainerProps } from "@storybook/blocks";
+import { BrandFooter } from "@monetizekit/ui-react";
 // Brand design tokens + primitive classes (social tiles, decor). These define the `--mk-*` brand
-// token set and `.mk-social`/`.mk-decor` classes the shared `BrandFooter` (on the Introduction
-// page) needs. Loaded at :root; each SDK story still re-pins its own `--mk-*` inline via the
-// decorator below, so component stories are unaffected.
+// token set and `.mk-social`/`.mk-decor` classes the shared `BrandFooter` needs. Loaded at :root;
+// each SDK story still re-pins its own `--mk-*` inline via the decorator below, so component
+// stories are unaffected.
 import "@monetizekit/brand/css";
 import "@monetizekit/brand/primitives.css";
 import { MonetizeKitProvider } from "../src/provider";
+
+/**
+ * Docs shell with the shared brand footer. Rendered as a sibling of (not inside) the
+ * `.sbdocs-content` column, so the footer sits on the docs page shell and spans the full preview
+ * width — a real page footer — while its own `.mk-footer__inner` keeps the content centered.
+ */
+function MonetizeKitDocsContainer({ children, context }: DocsContainerProps) {
+  return (
+    <>
+      <DocsContainer context={context}>{children}</DocsContainer>
+      <BrandFooter />
+    </>
+  );
+}
 import {
   resolveTokens,
   tokensToStyle,
@@ -36,6 +52,7 @@ const preview: Preview = {
   parameters: {
     controls: { matchers: { color: /(background|color)$/i, date: /Date$/i } },
     layout: "fullscreen",
+    docs: { container: MonetizeKitDocsContainer },
   },
   globalTypes: {
     theme: {
