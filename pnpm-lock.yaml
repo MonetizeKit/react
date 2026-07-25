@@ -28,8 +28,11 @@ importers:
         specifier: ^9.20.0
         version: 9.39.4
       '@monetizekit/brand':
-        specifier: 0.2.0-next-20260724190859
-        version: 0.2.0-next-20260724190859
+        specifier: ^0.2.0
+        version: 0.2.0
+      '@monetizekit/ui-react':
+        specifier: ^0.3.1
+        version: 0.3.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@playwright/test':
         specifier: ^1.61.1
         version: 1.61.1
@@ -930,17 +933,23 @@ packages:
       '@types/react': '>=16'
       react: '>=16'
 
-  '@monetizekit/brand@0.2.0-next-20260724190859':
-    resolution: {integrity: sha512-XU/bZxwJS4d2M9M9UAOGpadc+1NNiDSetfw/V/NLXwjQiWsp3SAxC6n1uKIIfhl8mxE8F0GC0cUOwAWbxxxbig==}
+  '@monetizekit/brand@0.2.0':
+    resolution: {integrity: sha512-BSqNzDnFwIWZxGChvfqx+tshvh1bDrXQXUpiAB2YAQ0bD0vwB4Fe58fwAaKp+WrGTOZQgxJyBo+Ql8x2BaNHZg==}
 
   '@monetizekit/design-tokens@0.3.0':
     resolution: {integrity: sha512-75PZCunx1gZhCsB19k0xCW8fYd0yqVHIDC/TTsmBgNM3vsRDuqF0INPOlhYcel+xYlxUJsrz887hPJVDywibJQ==}
 
-  '@monetizekit/design-tokens@0.4.0-next-20260724190859':
-    resolution: {integrity: sha512-pfBRFsyNnpcdD/67hnfDmInCLoyCawNi3/hugeV4AcIMjiugEb32PQnT7umL9+plLoAkW8Rx98inl7i0nWCXBg==}
+  '@monetizekit/design-tokens@0.4.0':
+    resolution: {integrity: sha512-wcqq9gZtmJg3pKiWr/jPWNZhgT85mebGtYtfYebH6DU0PyyQOALgUhqOfx7wlayzeIO1E00dVV/HOJ02LiM32Q==}
 
   '@monetizekit/types@0.1.0':
     resolution: {integrity: sha512-U2Brn5e1daIlOOFB+PGDuPjH4iTVldIQNR/eI/Ruuc5rnraYrpoI0rgvGJ309tb/FNxzP44jYSG69njzU34JJg==}
+
+  '@monetizekit/ui-react@0.3.1':
+    resolution: {integrity: sha512-fFq13fwwyXhj/Pdoe73Oh5IHrtcWeR+5hbJ8igT00WK55fGy36wKOelT3i6HJyPXk3raSbrkyG1+JzhPlw1RVg==}
+    peerDependencies:
+      react: ^18 || ^19
+      react-dom: ^18 || ^19
 
   '@napi-rs/wasm-runtime@1.1.6':
     resolution: {integrity: sha512-ZLv/JdUfkvOy9eCnnBaGfiO+XimbjebAeO+MRQqD/B+FR1tnRN0tpKSJHRbE8sFfS6aqsXZ67TQjfwfsxULVbg==}
@@ -5226,15 +5235,22 @@ snapshots:
       '@types/react': 19.2.17
       react: 19.2.7
 
-  '@monetizekit/brand@0.2.0-next-20260724190859':
+  '@monetizekit/brand@0.2.0':
     dependencies:
-      '@monetizekit/design-tokens': 0.4.0-next-20260724190859
+      '@monetizekit/design-tokens': 0.4.0
 
   '@monetizekit/design-tokens@0.3.0': {}
 
-  '@monetizekit/design-tokens@0.4.0-next-20260724190859': {}
+  '@monetizekit/design-tokens@0.4.0': {}
 
   '@monetizekit/types@0.1.0': {}
+
+  '@monetizekit/ui-react@0.3.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
+    dependencies:
+      '@monetizekit/brand': 0.2.0
+      '@monetizekit/design-tokens': 0.4.0
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
 
   '@napi-rs/wasm-runtime@1.1.6(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)':
     dependencies:
