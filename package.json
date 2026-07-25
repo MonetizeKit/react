@@ -55,7 +55,8 @@
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.0",
-    "@monetizekit/brand": "0.2.0-next-20260724190859",
+    "@monetizekit/brand": "^0.2.0",
+    "@monetizekit/ui-react": "^0.3.1",
     "@eslint/js": "^9.20.0",
     "@playwright/test": "^1.61.1",
     "@storybook/addon-a11y": "^8.6.0",

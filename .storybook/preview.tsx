@@ -1,4 +1,10 @@
 import type { Preview } from "@storybook/react";
+// Brand design tokens + primitive classes (social tiles, decor). These define the `--mk-*` brand
+// token set and `.mk-social`/`.mk-decor` classes the shared `BrandFooter` (on the Introduction
+// page) needs. Loaded at :root; each SDK story still re-pins its own `--mk-*` inline via the
+// decorator below, so component stories are unaffected.
+import "@monetizekit/brand/css";
+import "@monetizekit/brand/primitives.css";
 import { MonetizeKitProvider } from "../src/provider";
 import {
   resolveTokens,
