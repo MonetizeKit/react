@@ -1,5 +1,40 @@
 # @monetizekit/react
 
+## 0.10.0
+
+### Minor Changes
+
+- 495e31c: Make the MonetizeKit **brand** theme the default appearance and finish the Surface C convergence.
+
+  - `MonetizeKitProvider` now defaults to `appearance={{ theme: "brand" }}` (new exported
+    `DEFAULT_APPEARANCE`) — SDK components look on-brand out of the box (cream ground, orange primary,
+    Inter type, hard offset shadow). Every other theme/preset, the `theme × palette × mode` API,
+    partial-`tokens` overrides, and the `--mk-*` contract are unchanged and still selectable.
+  - Realign the drifted `memphis` preset to the canonical brand cream (`#FFFEF3`) + cyan (`#62D6FA`);
+    the preset name and all other values are unchanged.
+  - Storybook: default the Theme toolbar to `brand`, give the decorator a cream dot-textured ground
+    in Inter, and refresh the manager badge to the enlarged-MK brand mark.
+  - `PricingTable` hover elevation now derives from `--mk-fg` (token-driven) instead of a hardcoded
+    black shadow, so every theme honors tokens.
+
+  No customer capability is removed; existing explicit `appearance` values remain byte-stable
+  (locked by the back-compat snapshot suite; only `memphis` was intentionally realigned).
+
+- 686bf1a: Add the canonical `brand` theme and an optional 9-palette axis, sourced from
+  `@monetizekit/design-tokens`.
+
+  - New `brand` theme (`appearance={{ theme: "brand" }}`) backed by the shared design tokens, with
+    light/dark variants and full `theme × palette × mode` support.
+  - New optional `palette` on the theme-object appearance (`{ theme: "brand", palette, mode }`) —
+    `default` plus 8 experimentation palettes (`nord`/`solarized`/`dracula`/`github`/`rose-pine`/
+    `blue`/`green`/`unicorn`). Palette applies only to the `brand` theme; hand-tuned themes ignore it.
+  - Exports `PALETTE_NAMES`, `PaletteName`, and `ThemeAppearance`.
+  - Storybook gains a **Palette** toolbar (active for the brand theme).
+
+  Fully additive and capability-preserving: all 8 existing themes, 10 flat presets, the `theme × mode`
+  API (incl. `system`), partial-`tokens` overrides, and the exact `--mk-*` variable contract are
+  unchanged. A back-compat snapshot suite locks every pre-brand appearance to byte-exact output.
+
 ## 0.9.0
 
 ### Minor Changes
