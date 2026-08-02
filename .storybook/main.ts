@@ -1,3 +1,4 @@
+import { resolve } from "node:path";
 import type { StorybookConfig } from "@storybook/react-vite";
 
 /** Production home of the customer showcase (absolute URLs for share cards). */
@@ -42,16 +43,10 @@ const BRAND_SOCIAL = `
     <meta name="twitter:description" content="Explore and integrate MonetizeKit's SDK components — themes, palettes, light/dark, keys, and copy-paste snippets." />
     <meta name="twitter:image" content="${OG_IMAGE}" />`;
 
-function removeDefaultFavicon(head: string): string {
-  return head.replace(
-    /\s*<link rel="icon" type="image\/svg\+xml" href="\.\/favicon\.svg" \/>\s*/,
-    "\n",
-  );
-}
-
 const config: StorybookConfig = {
   stories: ["../src/**/*.mdx", "../src/**/*.stories.@(ts|tsx)"],
   addons: ["@storybook/addon-essentials", "@storybook/addon-a11y"],
+  presets: [resolve(".storybook/favicon-preset.ts")],
   framework: {
     name: "@storybook/react-vite",
     options: {},
@@ -62,8 +57,7 @@ const config: StorybookConfig = {
     "./public",
     { from: "../node_modules/@monetizekit/brand/dist/assets", to: "/brand" },
   ],
-  managerHead: (head) =>
-    `${removeDefaultFavicon(head)}${BRAND_FONTS}${BRAND_ICONS}${BRAND_SOCIAL}`,
+  managerHead: (head) => `${head}${BRAND_FONTS}${BRAND_ICONS}${BRAND_SOCIAL}`,
   previewHead: (head) => `${head}${BRAND_FONTS}${BRAND_ICONS}`,
 };
 
