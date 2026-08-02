@@ -42,6 +42,13 @@ const BRAND_SOCIAL = `
     <meta name="twitter:description" content="Explore and integrate MonetizeKit's SDK components — themes, palettes, light/dark, keys, and copy-paste snippets." />
     <meta name="twitter:image" content="${OG_IMAGE}" />`;
 
+function removeDefaultFavicon(head: string): string {
+  return head.replace(
+    /\s*<link rel="icon" type="image\/svg\+xml" href="\.\/favicon\.svg" \/>\s*/,
+    "\n",
+  );
+}
+
 const config: StorybookConfig = {
   stories: ["../src/**/*.mdx", "../src/**/*.stories.@(ts|tsx)"],
   addons: ["@storybook/addon-essentials", "@storybook/addon-a11y"],
@@ -50,13 +57,13 @@ const config: StorybookConfig = {
     options: {},
   },
   core: { disableTelemetry: true },
-  // `./public` overrides Storybook's built-in `favicon.svg` with the brand mark
-  // and ships the webmanifest; the brand asset bundle is mapped to `/brand`.
+  // `./public` ships the webmanifest; the canonical brand asset bundle is mapped to `/brand`.
   staticDirs: [
     "./public",
     { from: "../node_modules/@monetizekit/brand/dist/assets", to: "/brand" },
   ],
-  managerHead: (head) => `${head}${BRAND_FONTS}${BRAND_ICONS}${BRAND_SOCIAL}`,
+  managerHead: (head) =>
+    `${removeDefaultFavicon(head)}${BRAND_FONTS}${BRAND_ICONS}${BRAND_SOCIAL}`,
   previewHead: (head) => `${head}${BRAND_FONTS}${BRAND_ICONS}`,
 };
 
