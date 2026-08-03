@@ -1,3 +1,4 @@
+import { resolve } from "node:path";
 import type { StorybookConfig } from "@storybook/react-vite";
 
 /** Production home of the customer showcase (absolute URLs for share cards). */
@@ -45,13 +46,13 @@ const BRAND_SOCIAL = `
 const config: StorybookConfig = {
   stories: ["../src/**/*.mdx", "../src/**/*.stories.@(ts|tsx)"],
   addons: ["@storybook/addon-essentials", "@storybook/addon-a11y"],
+  presets: [resolve(".storybook/favicon-preset.ts")],
   framework: {
     name: "@storybook/react-vite",
     options: {},
   },
   core: { disableTelemetry: true },
-  // `./public` overrides Storybook's built-in `favicon.svg` with the brand mark
-  // and ships the webmanifest; the brand asset bundle is mapped to `/brand`.
+  // `./public` ships the webmanifest; the canonical brand asset bundle is mapped to `/brand`.
   staticDirs: [
     "./public",
     { from: "../node_modules/@monetizekit/brand/dist/assets", to: "/brand" },
