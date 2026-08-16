@@ -1,3 +1,6 @@
+# Thin caller for the org reusable SDK CI plus repo-specific Storybook checks.
+# The Required Checks Gate job is defined HERE so the branch-protection
+# context name stays stable.
 name: CI
 
 on:
@@ -7,80 +10,15 @@ on:
     branches: [main, delivery, development]
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  build-and-test:
-    name: Lint, Typecheck, Test, Build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-
-      - name: Enable corepack
-        run: corepack enable
-
-      - name: Get pnpm store directory
-        shell: bash
-        run: echo "STORE_PATH=$(pnpm store path)" >> "$GITHUB_ENV"
-
-      - name: Setup pnpm cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Lint
-        run: pnpm lint
-
-      - name: Typecheck
-        run: pnpm typecheck
-
-      - name: Unit + component tests
-        run: pnpm test
-
-      - name: Build package
-        run: pnpm build
-
-      - name: Package entry guard (no stub exports, real components resolve)
-        run: node scripts/check-package-entry.mjs
-
-      - name: Build Storybook
-        run: pnpm build-storybook
-
-  install-smoke:
-    name: Published-package install smoke
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-
-      - name: Enable corepack
-        run: corepack enable
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build package
-        run: pnpm build
-
-      # Pack the real tarball, install it into a clean npm project, then
-      # type-check + server-render PricingTable as an external consumer.
-      - name: Install smoke (pack + consume)
-        run: node scripts/install-smoke.mjs
+  ci:
+    uses: MonetizeKit/.github/.github/workflows/reusable-sdk-ci.yml@v1
+    with:
+      extra-check-command: pnpm build-storybook
 
   storybook-tests:
     name: Storybook test-runner (interaction + a11y)
@@ -129,15 +67,14 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ always() }}
     needs:
-      - build-and-test
-      - install-smoke
+      - ci
       - storybook-tests
     steps:
       - name: Validate required checks passed
         shell: bash
         run: |
           failed=0
-          for result in "build-and-test:${{ needs.build-and-test.result }}" "install-smoke:${{ needs.install-smoke.result }}" "storybook-tests:${{ needs.storybook-tests.result }}"; do
+          for result in "ci:${{ needs.ci.result }}" "storybook-tests:${{ needs.storybook-tests.result }}"; do
             name="${result%%:*}"
             status="${result##*:}"
             if [ "${status}" != "success" ]; then
