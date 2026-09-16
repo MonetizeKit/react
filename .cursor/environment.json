@@ -1,0 +1,17 @@
+{
+  "name": "@monetizekit/react",
+  "install": "pnpm install --frozen-lockfile",
+  "terminals": [
+    {
+      "name": "Storybook",
+      "command": "pnpm storybook",
+      "description": "Storybook component explorer / dev server for the @monetizekit/react SDK on http://localhost:6006."
+    }
+  ],
+  "ports": [
+    {
+      "name": "storybook",
+      "port": 6006
+    }
+  ]
+}
