@@ -2,7 +2,7 @@
   "name": "@monetizekit/react",
   "version": "0.10.0",
   "description": "Drop-in, themeable React components and hooks for pricing, paywalls, usage, and self-service billing — PricingTable, PricingComparison, Paywall, UsageBanner, AlertBanner, CustomerPortal, EntitlementGate.",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/MonetizeKit/react.git"
@@ -20,7 +20,8 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "NOTICE"
   ],
   "sideEffects": false,
   "publishConfig": {
